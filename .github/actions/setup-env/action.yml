@@ -4,7 +4,7 @@ description: Sets up the environment for the workflow
 runs:
   using: "composite"
   steps:
-    - name: Install .NET
+    - name: Set up .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: |
@@ -15,3 +15,6 @@ runs:
           8.0.x
           9.0.x
           10.0.x
+
+    - name: Install OpenSSL 1.1
+      run: sudo apt-get install libssl1.0.2
