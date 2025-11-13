@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: ./.github/actions/setup-env.yml
+    - uses: ./.github/actions/setup-env/action.yml
     
     - name: Restore dependencies
       run: dotnet restore
