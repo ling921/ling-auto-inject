@@ -1,0 +1,46 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0;</TargetFrameworks>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <PackageOutputPath>.nuget</PackageOutputPath>
+    <IncludeSymbols>false</IncludeSymbols>
+    <!-- Empty package, only for referencing the generator -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+  </PropertyGroup>
+
+  <!-- Package Settings -->
+  <PropertyGroup>
+    <PackageId>Ling.AutoInject</PackageId>
+    <Authors>ling921</Authors>
+    <Description>A compile-time, attribute-driven DI helper: generate IServiceCollection extension methods from SingletonService / ScopedService / TransientService attributes.</Description>
+    <PackageTags>ling;dependency-injection;sourcegenerator;analyzers;</PackageTags>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <NoPackageAnalysis>true</NoPackageAnalysis>
+
+    <RepositoryUrl>https://github.com/ling921/ling-auto-inject</RepositoryUrl>
+    <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
+    <PackageReleaseNotes>https://github.com/ling921/ling-auto-inject/releases</PackageReleaseNotes>
+    <Copyright>Copyright © 2025 ling921 All rights reserved.</Copyright>
+
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddAnalyzer</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+
+  <!-- Package source generator into analyzers directory -->
+  <Target Name="_AddAnalyzer" BeforeTargets="GetTargetPath">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(ProjectDir)..\Ling.AutoInject.SourceGenerators\bin\$(Configuration)\netstandard2.0\Ling.AutoInject.SourceGenerators.dll" PackagePath="analyzers/dotnet/cs" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Package Content -->
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="" />
+    <None Include="..\..\assets\icon.png" Visible="false" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,19 @@
+<Solution>
+  <Folder Name="/Solution items/">
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <File Path="src/Directory.Build.props" />
+    <File Path="src/Directory.Packages.props" />
+    <Project Path="src/Ling.AutoInject.SourceGenerators/Ling.AutoInject.SourceGenerators.csproj" Id="218d5cc3-4eec-49ef-822b-55cb06bc5162" />
+    <Project Path="src/Ling.AutoInject/Ling.AutoInject.csproj" Id="f00c0abc-782c-4939-bc12-ec06d111de87" />
+  </Folder>
+  <Folder Name="/tests/">
+    <File Path="tests/Directory.Build.props" />
+    <File Path="tests/Directory.Packages.props" />
+    <Project Path="tests/Ling.AutoInject.SourceGenerators.Tests/Ling.AutoInject.SourceGenerators.Tests.csproj" Id="9e041120-fb56-45e0-a1e9-d523c7b6347c" />
+  </Folder>
+</Solution>
