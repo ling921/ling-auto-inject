@@ -1,0 +1,26 @@
+name: Publish NuGet Package
+
+on:
+  release:
+    types:
+      - published
+
+envs:
+  NuGetDirectory: ${{ github.workspace }}/nuget
+
+jobs:
+  publish:
+      runs-on: ubuntu-latest
+      steps:
+      - uses: ./.github/actions/setup-env.yml
+
+      - name: Pack
+        run: dotnet pack ./src/Ling.Audit/Ling.Audit.csproj --configuration Release --output ${{ env.NuGetDirectory }}
+
+      - name: Publish to NuGet
+        run: |
+          for file in ${{ env.NuGetDirectory }}/*.{nupkg,snupkg}; do
+            if [ -f "$file" ]; then
+              dotnet nuget push "$file" --api-key "${{ secrets.NUGET_APIKEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+            fi
+          done
