@@ -21,7 +21,7 @@ jobs:
         run: dotnet restore
 
       - name: Build
-        run: dotnet build --configuration Release --no-restore 
+        run: dotnet build --configuration Release --no-restore
 
       - name: Pack
         run: dotnet pack ./src/Ling.AutoInject/Ling.AutoInject.csproj --configuration Release  --no-build --output ${{ env.NuGetDirectory }}
