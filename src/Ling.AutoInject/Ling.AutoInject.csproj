@@ -30,10 +30,15 @@
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddAnalyzer</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
 
-  <!-- Package source generator into analyzers directory -->
+  <!-- Package source generator into analyzers directory if it exists (safe check) -->
   <Target Name="_AddAnalyzer" BeforeTargets="GetTargetPath">
+    <PropertyGroup>
+      <GeneratorDll>$(ProjectDir)..\Ling.AutoInject.SourceGenerators\bin\$(Configuration)\netstandard2.0\Ling.AutoInject.SourceGenerators.dll</GeneratorDll>
+    </PropertyGroup>
+
     <ItemGroup>
-      <TfmSpecificPackageFile Include="$(ProjectDir)..\Ling.AutoInject.SourceGenerators\bin\$(Configuration)\netstandard2.0\Ling.AutoInject.SourceGenerators.dll" PackagePath="analyzers/dotnet/cs" />
+      <!-- Only include the file if it actually exists to avoid pack-time errors -->
+      <TfmSpecificPackageFile Include="$(GeneratorDll)" Condition="Exists('$(GeneratorDll)')" PackagePath="analyzers/dotnet/cs" />
     </ItemGroup>
   </Target>
 
