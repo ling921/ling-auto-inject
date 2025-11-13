@@ -1,6 +1,10 @@
 name: Setup Environment
 description: Sets up the environment for the workflow
 
+env:
+  # Necessary for installing OpenSSL 1.1
+  DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: 1
+
 runs:
   using: "composite"
   steps:
@@ -18,5 +22,5 @@ runs:
 
     - name: Install OpenSSL
       run: |
-        wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl1.0/libssl1.0.0_1.0.2n-1ubuntu5_amd64.deb
-        sudo dpkg -i libssl1.0.0_1.0.2n-1ubuntu5_amd64.deb
+        wget http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb
+        sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb
