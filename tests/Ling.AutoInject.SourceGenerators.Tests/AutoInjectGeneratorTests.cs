@@ -29,13 +29,22 @@ public class AutoInjectGeneratorTests
             #nullable enable annotations
 
             using Microsoft.Extensions.DependencyInjection;
+            using Microsoft.Extensions.DependencyInjection.Extensions;
 
             namespace MyNamespace
             {
+                /// <summary>
+                /// Auto-generated extension methods for registering services with AutoInject attributes.
+                /// </summary>
                 [global::System.CodeDom.Compiler.GeneratedCode("Ling.AutoInject.SourceGenerators", "{{Constants.Version}}")]
                 [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
                 public static class ServiceExtensions
                 {
+                    /// <summary>
+                    /// Adds services decorated with AutoInject attributes from the assembly 'TestProject' to the IServiceCollection.
+                    /// </summary>
+                    /// <param name="services">The IServiceCollection to add services to.</param>
+                    /// <returns>The IServiceCollection for chaining.</returns>
                     public static IServiceCollection AddCustomServices(this IServiceCollection services)
                     {
                         if (services == null) throw new ArgumentNullException(nameof(services));
@@ -100,14 +109,23 @@ public class AutoInjectGeneratorTests
             #nullable enable annotations
 
             using Microsoft.Extensions.DependencyInjection;
+            using Microsoft.Extensions.DependencyInjection.Extensions;
 
-            namespace TestProject.Extensions
+            namespace TestProject
             {
+                /// <summary>
+                /// Auto-generated extension methods for registering services with AutoInject attributes.
+                /// </summary>
                 [global::System.CodeDom.Compiler.GeneratedCode("Ling.AutoInject.SourceGenerators", "{{Constants.Version}}")]
                 [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-                public static class AutoInject_TestProject_Generated
+                public static class TestProject_AutoInjectGenerated
                 {
-                    public static IServiceCollection AddAutoInjectFor_TestProject(this IServiceCollection services)
+                    /// <summary>
+                    /// Adds services decorated with AutoInject attributes from the assembly 'TestProject' to the IServiceCollection.
+                    /// </summary>
+                    /// <param name="services">The IServiceCollection to add services to.</param>
+                    /// <returns>The IServiceCollection for chaining.</returns>
+                    public static IServiceCollection AddTestProjectServices(this IServiceCollection services)
                     {
                         if (services == null) throw new ArgumentNullException(nameof(services));
 
@@ -174,14 +192,23 @@ public class AutoInjectGeneratorTests
             #nullable enable annotations
 
             using Microsoft.Extensions.DependencyInjection;
+            using Microsoft.Extensions.DependencyInjection.Extensions;
 
-            namespace TestProject.Extensions
+            namespace TestProject
             {
+                /// <summary>
+                /// Auto-generated extension methods for registering services with AutoInject attributes.
+                /// </summary>
                 [global::System.CodeDom.Compiler.GeneratedCode("Ling.AutoInject.SourceGenerators", "{{Constants.Version}}")]
                 [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-                public static class AutoInject_TestProject_Generated
+                public static class TestProject_AutoInjectGenerated
                 {
-                    public static IServiceCollection AddAutoInjectFor_TestProject(this IServiceCollection services)
+                    /// <summary>
+                    /// Adds services decorated with AutoInject attributes from the assembly 'TestProject' to the IServiceCollection.
+                    /// </summary>
+                    /// <param name="services">The IServiceCollection to add services to.</param>
+                    /// <returns>The IServiceCollection for chaining.</returns>
+                    public static IServiceCollection AddTestProjectServices(this IServiceCollection services)
                     {
                         if (services == null) throw new ArgumentNullException(nameof(services));
 
@@ -251,14 +278,23 @@ public class AutoInjectGeneratorTests
             #nullable enable annotations
 
             using Microsoft.Extensions.DependencyInjection;
+            using Microsoft.Extensions.DependencyInjection.Extensions;
 
-            namespace TestProject.Extensions
+            namespace TestProject
             {
+                /// <summary>
+                /// Auto-generated extension methods for registering services with AutoInject attributes.
+                /// </summary>
                 [global::System.CodeDom.Compiler.GeneratedCode("Ling.AutoInject.SourceGenerators", "{{Constants.Version}}")]
                 [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-                public static class AutoInject_TestProject_Generated
+                public static class TestProject_AutoInjectGenerated
                 {
-                    public static IServiceCollection AddAutoInjectFor_TestProject(this IServiceCollection services)
+                    /// <summary>
+                    /// Adds services decorated with AutoInject attributes from the assembly 'TestProject' to the IServiceCollection.
+                    /// </summary>
+                    /// <param name="services">The IServiceCollection to add services to.</param>
+                    /// <returns>The IServiceCollection for chaining.</returns>
+                    public static IServiceCollection AddTestProjectServices(this IServiceCollection services)
                     {
                         if (services == null) throw new ArgumentNullException(nameof(services));
 
@@ -314,14 +350,23 @@ public class AutoInjectGeneratorTests
             #nullable enable annotations
 
             using Microsoft.Extensions.DependencyInjection;
+            using Microsoft.Extensions.DependencyInjection.Extensions;
 
-            namespace TestProject.Extensions
+            namespace TestProject
             {
+                /// <summary>
+                /// Auto-generated extension methods for registering services with AutoInject attributes.
+                /// </summary>
                 [global::System.CodeDom.Compiler.GeneratedCode("Ling.AutoInject.SourceGenerators", "{{Constants.Version}}")]
                 [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-                public static class AutoInject_TestProject_Generated
+                public static class TestProject_AutoInjectGenerated
                 {
-                    public static IServiceCollection AddAutoInjectFor_TestProject(this IServiceCollection services)
+                    /// <summary>
+                    /// Adds services decorated with AutoInject attributes from the assembly 'TestProject' to the IServiceCollection.
+                    /// </summary>
+                    /// <param name="services">The IServiceCollection to add services to.</param>
+                    /// <returns>The IServiceCollection for chaining.</returns>
+                    public static IServiceCollection AddTestProjectServices(this IServiceCollection services)
                     {
                         if (services == null) throw new ArgumentNullException(nameof(services));
 
@@ -377,14 +422,23 @@ public class AutoInjectGeneratorTests
             #nullable enable annotations
 
             using Microsoft.Extensions.DependencyInjection;
+            using Microsoft.Extensions.DependencyInjection.Extensions;
 
-            namespace TestProject.Extensions
+            namespace TestProject
             {
+                /// <summary>
+                /// Auto-generated extension methods for registering services with AutoInject attributes.
+                /// </summary>
                 [global::System.CodeDom.Compiler.GeneratedCode("Ling.AutoInject.SourceGenerators", "{{Constants.Version}}")]
                 [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-                public static class AutoInject_TestProject_Generated
+                public static class TestProject_AutoInjectGenerated
                 {
-                    public static IServiceCollection AddAutoInjectFor_TestProject(this IServiceCollection services)
+                    /// <summary>
+                    /// Adds services decorated with AutoInject attributes from the assembly 'TestProject' to the IServiceCollection.
+                    /// </summary>
+                    /// <param name="services">The IServiceCollection to add services to.</param>
+                    /// <returns>The IServiceCollection for chaining.</returns>
+                    public static IServiceCollection AddTestProjectServices(this IServiceCollection services)
                     {
                         if (services == null) throw new ArgumentNullException(nameof(services));
 
@@ -463,14 +517,23 @@ public class AutoInjectGeneratorTests
             #nullable enable annotations
 
             using Microsoft.Extensions.DependencyInjection;
+            using Microsoft.Extensions.DependencyInjection.Extensions;
 
-            namespace TestProject.Extensions
+            namespace TestProject
             {
+                /// <summary>
+                /// Auto-generated extension methods for registering services with AutoInject attributes.
+                /// </summary>
                 [global::System.CodeDom.Compiler.GeneratedCode("Ling.AutoInject.SourceGenerators", "{{Constants.Version}}")]
                 [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-                public static class AutoInject_TestProject_Generated
+                public static class TestProject_AutoInjectGenerated
                 {
-                    public static IServiceCollection AddAutoInjectFor_TestProject(this IServiceCollection services)
+                    /// <summary>
+                    /// Adds services decorated with AutoInject attributes from the assembly 'TestProject' to the IServiceCollection.
+                    /// </summary>
+                    /// <param name="services">The IServiceCollection to add services to.</param>
+                    /// <returns>The IServiceCollection for chaining.</returns>
+                    public static IServiceCollection AddTestProjectServices(this IServiceCollection services)
                     {
                         if (services == null) throw new ArgumentNullException(nameof(services));
 
@@ -549,14 +612,23 @@ public class AutoInjectGeneratorTests
             #nullable enable annotations
 
             using Microsoft.Extensions.DependencyInjection;
+            using Microsoft.Extensions.DependencyInjection.Extensions;
 
-            namespace TestProject.Extensions
+            namespace TestProject
             {
+                /// <summary>
+                /// Auto-generated extension methods for registering services with AutoInject attributes.
+                /// </summary>
                 [global::System.CodeDom.Compiler.GeneratedCode("Ling.AutoInject.SourceGenerators", "{{Constants.Version}}")]
                 [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-                public static class AutoInject_TestProject_Generated
+                public static class TestProject_AutoInjectGenerated
                 {
-                    public static IServiceCollection AddAutoInjectFor_TestProject(this IServiceCollection services)
+                    /// <summary>
+                    /// Adds services decorated with AutoInject attributes from the assembly 'TestProject' to the IServiceCollection.
+                    /// </summary>
+                    /// <param name="services">The IServiceCollection to add services to.</param>
+                    /// <returns>The IServiceCollection for chaining.</returns>
+                    public static IServiceCollection AddTestProjectServices(this IServiceCollection services)
                     {
                         if (services == null) throw new ArgumentNullException(nameof(services));
 
@@ -642,14 +714,23 @@ public class AutoInjectGeneratorTests
             #nullable enable annotations
 
             using Microsoft.Extensions.DependencyInjection;
+            using Microsoft.Extensions.DependencyInjection.Extensions;
 
-            namespace TestProject.Extensions
+            namespace TestProject
             {
+                /// <summary>
+                /// Auto-generated extension methods for registering services with AutoInject attributes.
+                /// </summary>
                 [global::System.CodeDom.Compiler.GeneratedCode("Ling.AutoInject.SourceGenerators", "{{Constants.Version}}")]
                 [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-                public static class AutoInject_TestProject_Generated
+                public static class TestProject_AutoInjectGenerated
                 {
-                    public static IServiceCollection AddAutoInjectFor_TestProject(this IServiceCollection services)
+                    /// <summary>
+                    /// Adds services decorated with AutoInject attributes from the assembly 'TestProject' to the IServiceCollection.
+                    /// </summary>
+                    /// <param name="services">The IServiceCollection to add services to.</param>
+                    /// <returns>The IServiceCollection for chaining.</returns>
+                    public static IServiceCollection AddTestProjectServices(this IServiceCollection services)
                     {
                         if (services == null) throw new ArgumentNullException(nameof(services));
 
@@ -728,14 +809,23 @@ public class AutoInjectGeneratorTests
             #nullable enable annotations
 
             using Microsoft.Extensions.DependencyInjection;
+            using Microsoft.Extensions.DependencyInjection.Extensions;
 
-            namespace TestProject.Extensions
+            namespace TestProject
             {
+                /// <summary>
+                /// Auto-generated extension methods for registering services with AutoInject attributes.
+                /// </summary>
                 [global::System.CodeDom.Compiler.GeneratedCode("Ling.AutoInject.SourceGenerators", "{{Constants.Version}}")]
                 [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-                public static class AutoInject_TestProject_Generated
+                public static class TestProject_AutoInjectGenerated
                 {
-                    public static IServiceCollection AddAutoInjectFor_TestProject(this IServiceCollection services)
+                    /// <summary>
+                    /// Adds services decorated with AutoInject attributes from the assembly 'TestProject' to the IServiceCollection.
+                    /// </summary>
+                    /// <param name="services">The IServiceCollection to add services to.</param>
+                    /// <returns>The IServiceCollection for chaining.</returns>
+                    public static IServiceCollection AddTestProjectServices(this IServiceCollection services)
                     {
                         if (services == null) throw new ArgumentNullException(nameof(services));
 

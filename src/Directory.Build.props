@@ -9,7 +9,7 @@
 
   <PropertyGroup>
     <VersionPrefix>1.0.0</VersionPrefix>
-    <VersionSuffix>RC-1</VersionSuffix>
+    <VersionSuffix>rc-2</VersionSuffix>
   </PropertyGroup>
 
   <ItemGroup>
