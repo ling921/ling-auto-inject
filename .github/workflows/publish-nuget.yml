@@ -24,7 +24,7 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - name: Pack
-        run: dotnet pack ./src/Ling.AutoInject/Ling.AutoInject.csproj --configuration Release  --no-build --output ${{ env.NuGetDirectory }}
+        run: dotnet pack ./src/Ling.AutoInject/Ling.AutoInject.csproj --configuration Release --no-build --output ${{ env.NuGetDirectory }}
 
       - name: Publish to NuGet
         run: |
