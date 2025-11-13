@@ -10,8 +10,8 @@ envs:
 
 jobs:
   publish:
-      runs-on: ubuntu-latest
-      steps:
+    runs-on: ubuntu-latest
+    steps:
       - uses: ./.github/actions/setup-env/action.yml
 
       - name: Pack
