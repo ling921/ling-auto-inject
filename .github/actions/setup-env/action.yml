@@ -4,11 +4,6 @@ description: Sets up the environment for the workflow
 runs:
   using: "composite"
   steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-
     - name: Install .NET
       uses: actions/setup-dotnet@v4
       with:
