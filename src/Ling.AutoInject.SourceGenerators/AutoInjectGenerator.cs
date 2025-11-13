@@ -3,6 +3,7 @@ using Ling.AutoInject.SourceGenerators.Helpers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
 using System.Collections.Immutable;
 using System.Text;
@@ -43,9 +44,9 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
             .Where(static x => x != null)
             .Collect();
 
-        var compilationAndClasses = context.CompilationProvider.Combine(classDeclarations);
+        var compilationAndClasses = context.CompilationProvider.Combine(context.AnalyzerConfigOptionsProvider.Combine(classDeclarations));
 
-        context.RegisterSourceOutput(compilationAndClasses, (spc, source) => Execute(source.Left, source.Right!, spc));
+        context.RegisterSourceOutput(compilationAndClasses, (spc, source) => Execute(spc, source.Left, source.Right.Right!, source.Right.Left));
     }
 
     private static void GenerateAttributes(IncrementalGeneratorPostInitializationContext context)
@@ -56,7 +57,11 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         context.AddSource("TransientServiceAttribute.g.cs", SourceCodes.TransientServiceAttribute);
     }
 
-    private void Execute(Compilation compilation, ImmutableArray<ClassWithAttributes> classes, SourceProductionContext context)
+    private void Execute(
+        SourceProductionContext context,
+        Compilation compilation,
+        ImmutableArray<ClassWithAttributes> classes,
+        AnalyzerConfigOptionsProvider analyzerConfigOptionsProvider)
     {
         var registrations = new List<RegistrationInfo>();
         var symbols = new AutoInjectSymbols(compilation);
@@ -99,12 +104,11 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         var supportKeyedService = targetVerison > Constants.SupportKeyedServiceVersion;
 
         var assemblyName = compilation.AssemblyName ?? "Generated";
-        // Use assembly name as base namespace and append ".Extensions" so generated code lives
-        // in a predictable, project-specific namespace instead of a fixed one.
-        var @namespace = assemblyName + ".Extensions";
         var sanitized = SanitizeIdentifier(assemblyName);
-        var className = $"AutoInject_{sanitized}_Generated";
-        var methodName = $"AddAutoInjectFor_{sanitized}";
+
+        var @namespace = compilation.GetNamespace(analyzerConfigOptionsProvider) ?? "Ling.AutoInject";
+        var className = $"{sanitized}_AutoInjectGenerated";
+        var methodName = $"Add{sanitized}Services";
 
         foreach (var attributeData in compilation.Assembly.GetAttributes())
         {
@@ -162,17 +166,25 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         cb.AppendLine("#nullable enable annotations");
         cb.AppendLine();
         cb.AppendLine("using Microsoft.Extensions.DependencyInjection;");
+        cb.AppendLine("using Microsoft.Extensions.DependencyInjection.Extensions;");
         cb.AppendLine();
 
         cb.AppendFormatLine("namespace {0}", @namespace);
         cb.OpenBrace();
 
+        cb.AppendLine("/// <summary>");
+        cb.AppendLine("/// Auto-generated extension methods for registering services with AutoInject attributes.");
+        cb.AppendLine("/// </summary>");
         cb.AppendFormatLine("[global::System.CodeDom.Compiler.GeneratedCode(\"Ling.AutoInject.SourceGenerators\", \"{0}\")]", Constants.Version);
         cb.AppendLine("[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]");
         cb.AppendFormatLine("public static class {0}", className);
         cb.OpenBrace();
 
-        // public method
+        cb.AppendLine("/// <summary>");
+        cb.AppendFormatLine("/// Adds services decorated with AutoInject attributes from the assembly '{0}' to the IServiceCollection.", assemblyName);
+        cb.AppendLine("/// </summary>");
+        cb.AppendLine("/// <param name=\"services\">The IServiceCollection to add services to.</param>");
+        cb.AppendLine("/// <returns>The IServiceCollection for chaining.</returns>");
         cb.AppendFormatLine("public static IServiceCollection {0}(this IServiceCollection services)", methodName);
         cb.OpenBrace();
         cb.AppendLine("if (services == null) throw new ArgumentNullException(nameof(services));");
@@ -273,26 +285,6 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
 
         var hintName = $"AutoInject_{sanitized}.g.cs";
         context.AddSource(hintName, SourceText.From(cb.ToString(), Encoding.UTF8));
-    }
-
-    private static Location? GetAttributeLocation(AttributeData ad)
-    {
-        try
-        {
-            var syntaxRef = ad.ApplicationSyntaxReference;
-            if (syntaxRef == null) return null;
-            var node = syntaxRef.GetSyntax();
-            return node.GetLocation();
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
-    private static string? ServiceTypeKey(INamedTypeSymbol? svc)
-    {
-        return svc?.ToDisplayString();
     }
 
     private static string SanitizeIdentifier(string name)

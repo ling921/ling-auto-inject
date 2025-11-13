@@ -5,7 +5,7 @@ on:
     types:
       - published
 
-envs:
+env:
   NuGetDirectory: ${{ github.workspace }}/nuget
 
 jobs:
