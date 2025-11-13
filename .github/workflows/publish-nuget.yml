@@ -12,7 +12,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: ./.github/actions/setup-env/action.yml
+      - uses: ./.github/actions/setup-env
 
       - name: Pack
         run: dotnet pack ./src/Ling.AutoInject/Ling.AutoInject.csproj --configuration Release --output ${{ env.NuGetDirectory }}
