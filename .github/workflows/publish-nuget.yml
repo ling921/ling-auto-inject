@@ -17,8 +17,14 @@ jobs:
 
       - uses: ./.github/actions/setup-env
 
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
       - name: Pack
-        run: dotnet pack ./src/Ling.AutoInject/Ling.AutoInject.csproj --configuration Release --output ${{ env.NuGetDirectory }}
+        run: dotnet pack ./src/Ling.AutoInject/Ling.AutoInject.csproj --configuration Release --no-build --output ${{ env.NuGetDirectory }}
 
       - name: Publish to NuGet
         run: |
