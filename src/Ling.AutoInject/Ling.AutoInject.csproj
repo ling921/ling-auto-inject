@@ -41,7 +41,7 @@
       <GeneratorDll>$(GeneratorOutDir)Ling.AutoInject.SourceGenerators.dll</GeneratorDll>
     </PropertyGroup>
 
-    <ItemGroup Condition="Exists('$(GeneratorDll)') And '$(TargetFramework)' == 'net10.0'">
+    <ItemGroup Condition="Exists('$(GeneratorDll)')">
       <TfmSpecificPackageFile Include="$(GeneratorDll)"
                               PackagePath="analyzers/dotnet/cs" />
       <TfmSpecificPackageFile Include="$(GeneratorOutDir)**\*.resources.dll"
