@@ -204,34 +204,35 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
             cb.OpenBrace();
 
             // track emitted registrations to avoid duplicates
-            var dict = new Dictionary<(INamedTypeSymbol Implementation, string? ServiceKey), string>();
+            var dict = new Dictionary<(INamedTypeSymbol Implementation, string? ServiceKey), (string DuplicatedService, INamedTypeSymbol? ServiceType)>();
             foreach (var reg in registrations.Where(r => r.Lifetime == lifetime))
             {
                 var serviceKey = supportKeyedService ? reg.ServiceKeyLiteral : null;
                 if (dict.TryGetValue((reg.Implementation, serviceKey), out var exp))
                 {
+                    var (duplicatedService, serviceType) = exp;
                     if (serviceKey is null)
                     {
                         if (reg.ServiceType is null)
                         {
-                            cb.AppendFormatLine("services.TryAdd{0}<{1}>(sp => sp.GetRequiredService<{1}>());", lifetime, exp);
+                            cb.AppendFormatLine("services.TryAdd{0}<{1}>(sp => sp.GetRequiredService<{1}>());", lifetime, duplicatedService);
                         }
-                        else
+                        else if (!SymbolEqualityComparer.Default.Equals(reg.ServiceType, serviceType))
                         {
                             var svc = reg.ServiceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                            cb.AppendFormatLine("services.TryAdd{0}<{1}>(sp => ({1})sp.GetRequiredService<{2}>());", lifetime, svc, exp);
+                            cb.AppendFormatLine("services.TryAdd{0}<{1}>(sp => ({1})sp.GetRequiredService<{2}>());", lifetime, svc, duplicatedService);
                         }
                     }
                     else
                     {
                         if (reg.ServiceType is null)
                         {
-                            cb.AppendFormatLine("services.TryAddKeyed{0}<{1}>({2}, (sp, key) => sp.GetRequiredKeyedService<{1}>(key));", lifetime, exp, serviceKey);
+                            cb.AppendFormatLine("services.TryAddKeyed{0}<{1}>({2}, (sp, key) => sp.GetRequiredKeyedService<{1}>(key));", lifetime, duplicatedService, serviceKey);
                         }
                         else
                         {
                             var svc = reg.ServiceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                            cb.AppendFormatLine("services.TryAddKeyed{0}<{1}>({2}, (sp, key) => ({1})sp.GetRequiredKeyedService<{3}>(key));", lifetime, svc, serviceKey, exp);
+                            cb.AppendFormatLine("services.TryAddKeyed{0}<{1}>({2}, (sp, key) => ({1})sp.GetRequiredKeyedService<{3}>(key));", lifetime, svc, serviceKey, duplicatedService);
                         }
                     }
                 }
@@ -243,13 +244,13 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
                         if (reg.ServiceType is null)
                         {
                             cb.AppendFormatLine("services.TryAdd{0}<{1}>();", lifetime, impl);
-                            dict[(reg.Implementation, null)] = impl;
+                            dict[(reg.Implementation, null)] = (impl, null);
                         }
                         else
                         {
                             var svc = reg.ServiceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
                             cb.AppendFormatLine("services.TryAdd{0}<{1}, {2}>();", lifetime, svc, impl);
-                            dict[(reg.Implementation, null)] = svc;
+                            dict[(reg.Implementation, null)] = (svc, reg.ServiceType);
                         }
                     }
                     else
@@ -257,13 +258,13 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
                         if (reg.ServiceType is null)
                         {
                             cb.AppendFormatLine("services.TryAddKeyed{0}<{1}>({2});", lifetime, impl, serviceKey);
-                            dict[(reg.Implementation, serviceKey)] = impl;
+                            dict[(reg.Implementation, serviceKey)] = (impl, null);
                         }
                         else
                         {
                             var svc = reg.ServiceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
                             cb.AppendFormatLine("services.TryAddKeyed{0}<{1}, {2}>({3});", lifetime, svc, impl, serviceKey);
-                            dict[(reg.Implementation, serviceKey)] = svc;
+                            dict[(reg.Implementation, serviceKey)] = (svc, reg.ServiceType);
                         }
                     }
                 }
