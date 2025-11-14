@@ -24,7 +24,7 @@ public class AutoInjectGeneratorTests
     {
         static string IndentServiceLines(string? serviceLines) => string.IsNullOrWhiteSpace(serviceLines)
                 ? string.Empty
-                : string.Concat(serviceLines.Split(Environment.NewLine).Select(line => Environment.NewLine + "            " + line.Trim()));
+                : string.Concat(serviceLines.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None).Select(line => Environment.NewLine + "            " + line.Trim()));
 
         var singletonServicesBody = IndentServiceLines(expectedSingletonServices);
         var scopedServicesBody = IndentServiceLines(expectedScopedServices);
