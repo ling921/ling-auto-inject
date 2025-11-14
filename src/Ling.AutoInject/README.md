@@ -50,7 +50,7 @@ Install-Package Ling.AutoInject
 3. Call the generated extension in `Program` / `Startup`:
 
     ```csharp
-    services.AddAutoInjectFor_MyAssembly();
+    services.Add[MyAssembly]Services();
     // or
     services.AddCustomServices();
     ```
@@ -71,4 +71,4 @@ Install-Package Ling.AutoInject
 
 ## License
 
-- See repository license file (if present).
+- MIT License.

@@ -51,7 +51,7 @@ public class MyService { }
 ### 4. Call the generated extension in `Program` or `Startup`:
 
 ```csharp
-services.AddAutoInjectFor_MyAssembly(); // default generated name
+services.Add[MyAssembly]Services(); // default generated name
 // or
 services.AddCustomServices(); // when configured via AutoInjectConfig
 ```
