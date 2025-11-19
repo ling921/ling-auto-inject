@@ -12,7 +12,7 @@ namespace Ling.AutoInject.SourceGenerators.Tests.Analyzers;
 public sealed class ConflictingExtensionAnalyzerTests
 {
     [Fact]
-    public async Task ConflictingExtensionAnalyzer_NoConflicts_ReportsNoDiagnostic()
+    public async Task Analyze_NoConflictingExtension_NoDiagnostic()
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -35,7 +35,7 @@ public sealed class ConflictingExtensionAnalyzerTests
     }
 
     [Fact]
-    public async Task ConflictingExtensionAnalyzer_Conflicts_ReportsDiagnostic()
+    public async Task Analyze_ConflictingExtension_ByName_ReportsDiagnostic()
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -62,7 +62,7 @@ public sealed class ConflictingExtensionAnalyzerTests
     }
 
     [Fact]
-    public async Task ConflictingExtensionAnalyzer_Conflicts2_ReportsDiagnostic()
+    public async Task Analyze_ConflictingExtension_WithNameof_ReportsDiagnostic()
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -89,7 +89,7 @@ public sealed class ConflictingExtensionAnalyzerTests
     }
 
     [Fact]
-    public async Task ConflictingExtensionAnalyzer_Conflicts3_ReportsDiagnostic()
+    public async Task Analyze_ConflictingExtension_WithConstExpr_ReportsDiagnostic()
     {
         var source = $$"""
             using Ling.AutoInject;

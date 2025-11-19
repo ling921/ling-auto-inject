@@ -139,6 +139,20 @@
     <value>The service type '{0}' is either not an interface or is not implemented by '{1}'.</value>
   </data>
 
+  <data name="InvalidConfig_Title" xml:space="preserve">
+    <value>Invalid AutoInject configuration</value>
+  </data>
+  <data name="InvalidConfig_Message" xml:space="preserve">
+    <value>AutoInjectConfig's {0} value '{1}' is not a valid {0}. It must be a valid C# identifier.</value>
+  </data>
+
+  <data name="RequiredServiceTypeForReplace_Title" xml:space="preserve">
+    <value>Required service type for Replace registration</value>
+  </data>
+  <data name="RequiredServiceTypeForReplace_Message" xml:space="preserve">
+    <value>A service type must be specified when using Replace service registration.</value>
+  </data>
+
   <data name="NotSupportedKeyedService_Title" xml:space="preserve">
     <value>Keyed service registration not supported</value>
   </data>
@@ -153,10 +167,10 @@
     <value>The configured AutoInject extension method name '{0}' is already used by an existing extension method taking 'this IServiceCollection' as the first parameter. Choose a different MethodName in AutoInjectConfig to avoid conflicts.</value>
   </data>
 
-  <data name="InvalidConfig_Title" xml:space="preserve">
-    <value>Invalid AutoInject configuration</value>
+  <data name="NotSupportedReplaceService_Title" xml:space="preserve">
+    <value>Replace service registration not supported</value>
   </data>
-  <data name="InvalidConfig_Message" xml:space="preserve">
-    <value>AutoInjectConfig's {0} value '{1}' is not a valid {0}. It must be a valid C# identifier.</value>
+  <data name="NotSupportedReplaceService_Message" xml:space="preserve">
+    <value>Replace service registrations require 'Microsoft.Extensions.DependencyInjection.Abstractions' version 8.0.0 or later.</value>
   </data>
 </root>

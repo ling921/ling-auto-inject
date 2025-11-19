@@ -2,6 +2,16 @@
 ; https://github.com/dotnet/roslyn-analyzers/blob/main/src/Microsoft.CodeAnalysis.Analyzers/ReleaseTrackingAnalyzers.Help.md
 
 
+## Release 1.1.0
+
+### New Rules
+
+Rule ID | Category | Severity | Notes
+--------|----------|----------|--------------------
+LAI005  |  Design  |  Error   | Required service type for Replace registration.
+LAI103  |  Design  |  Warning | Not supported replace service registration.
+
+
 ## Release 1.0.0
 
 ### New Rules

@@ -151,6 +151,42 @@ namespace Ling.AutoInject.SourceGenerators.Resources {
         }
         
         /// <summary>
+        ///   查找类似 Replace service registrations require &apos;Microsoft.Extensions.DependencyInjection.Abstractions&apos; version 8.0.0 or later. 的本地化字符串。
+        /// </summary>
+        internal static string NotSupportedReplaceService_Message {
+            get {
+                return ResourceManager.GetString("NotSupportedReplaceService_Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Replace service registration not supported 的本地化字符串。
+        /// </summary>
+        internal static string NotSupportedReplaceService_Title {
+            get {
+                return ResourceManager.GetString("NotSupportedReplaceService_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 A service type must be specified when using Replace service registration. 的本地化字符串。
+        /// </summary>
+        internal static string RequiredServiceTypeForReplace_Message {
+            get {
+                return ResourceManager.GetString("RequiredServiceTypeForReplace_Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Required service type for Replace registration 的本地化字符串。
+        /// </summary>
+        internal static string RequiredServiceTypeForReplace_Title {
+            get {
+                return ResourceManager.GetString("RequiredServiceTypeForReplace_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 The service type &apos;{0}&apos; is either not an interface or is not implemented by &apos;{1}&apos;. 的本地化字符串。
         /// </summary>
         internal static string ServiceTypeMismatch_Message {
