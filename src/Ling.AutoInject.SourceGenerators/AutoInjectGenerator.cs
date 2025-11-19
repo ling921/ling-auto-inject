@@ -66,12 +66,16 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         var registrations = new List<RegistrationInfo>();
         var symbols = new AutoInjectSymbols(compilation);
 
+        var targetVerison = compilation.FindReferenceAssemblyVersionByTypeMetadataName(Constants.ServiceCollectionServiceExtensionsFullName);
+        var supportKeyedService = targetVerison > Constants.SupportKeyedServiceVersion;
+
         foreach (var cwa in classes)
         {
             var classSymbol = cwa.ClassSymbol;
             var attrData = cwa.Attributes;
 
-            var regList = new List<RegistrationRecord>();
+            var regList = new List<RegistrationInfo>();
+            var serviceRegistrationSet = new HashSet<(INamedTypeSymbol? ServiceType, string? ServiceKey)>();
 
             foreach (var ad in attrData)
             {
@@ -87,21 +91,32 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
                     serviceTypedConstant = ad.GetNamedArgument("ServiceType");
                 }
                 var serviceKeyTypedConstant = ad.GetNamedArgument("ServiceKey");
+                var replaceTypedConstant = ad.GetNamedArgument("Replace");
 
-                var serviceTypeSymbol = serviceTypedConstant.Value as INamedTypeSymbol;
-                var serviceKeyLiteral = serviceKeyTypedConstant.IsNull ? null : serviceKeyTypedConstant.ToCSharpString();
+                var serviceType = serviceTypedConstant.Value as INamedTypeSymbol;
+                var serviceKey = serviceKeyTypedConstant.IsNull ? null : serviceKeyTypedConstant.ToCSharpString();
+                var replace = !replaceTypedConstant.IsNull && replaceTypedConstant.Value is bool b && b;
 
-                regList.Add(new RegistrationRecord(lifetime, serviceTypeSymbol, ad, serviceKeyLiteral));
+                // Keyed services and replace are only supported in 'Microsoft.Extensions.DependencyInjection.Abstractions' v8.0.0+
+                // If not supported, ignore serviceKey and replace
+                if (!supportKeyedService)
+                {
+                    serviceKey = null;
+                    replace = false;
+                }
+
+                // Avoid duplicate registrations
+                if (!serviceRegistrationSet.Contains((serviceType, serviceKey)))
+                {
+                    regList.Add(new RegistrationInfo(classSymbol, lifetime, serviceType, serviceKey, replace));
+                    serviceRegistrationSet.Add((serviceType, serviceKey));
+                }
             }
 
-            foreach (var rec in regList.OrderBy(r => r.ServiceType is null ? 0 : 1))
-            {
-                registrations.Add(new RegistrationInfo(classSymbol, rec.ServiceType, rec.Lifetime, rec.ServiceKeyLiteral));
-            }
+            registrations.AddRange(regList
+                .OrderBy(r => r.ServiceType is null ? 0 : 1)
+                .ThenBy(r => r.Replace));
         }
-
-        var targetVerison = compilation.FindReferenceAssemblyVersionByTypeMetadataName(Constants.ServiceCollectionServiceExtensionsFullName);
-        var supportKeyedService = targetVerison > Constants.SupportKeyedServiceVersion;
 
         var assemblyName = compilation.AssemblyName ?? "Generated";
         var sanitized = SanitizeIdentifier(assemblyName);
@@ -110,53 +125,38 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         var className = $"{sanitized}_AutoInjectGenerated";
         var methodName = $"Add{sanitized}Services";
 
+        #region Read AutoInject configuration from assembly attribute
+
         foreach (var attributeData in compilation.Assembly.GetAttributes())
         {
             if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, symbols.AutoInjectConfigAttributeSymbol))
             {
-                foreach (var arg in attributeData.NamedArguments)
+                var namespaceTypedConstant = attributeData.GetNamedArgument("Namespace");
+                if (!namespaceTypedConstant.IsNull
+                    && namespaceTypedConstant.ToCSharpString().Trim('"') is string { Length: > 0 } ns)
                 {
-                    switch (arg.Key)
-                    {
-                        case "Namespace":
-                            if (!arg.Value.IsNull)
-                            {
-                                var ns = arg.Value.ToCSharpString().Trim('"');
-                                if (!string.IsNullOrWhiteSpace(ns))
-                                {
-                                    @namespace = ns;
-                                }
-                            }
-                            break;
-
-                        case "ClassName":
-                            if (!arg.Value.IsNull)
-                            {
-                                var cn = arg.Value.ToCSharpString().Trim('"');
-                                if (!string.IsNullOrWhiteSpace(cn))
-                                {
-                                    className = cn;
-                                }
-                            }
-                            break;
-
-                        case "MethodName":
-                            if (!arg.Value.IsNull)
-                            {
-                                var mn = arg.Value.ToCSharpString().Trim('"');
-                                if (!string.IsNullOrWhiteSpace(mn))
-                                {
-                                    methodName = mn;
-                                }
-                            }
-                            break;
-
-                        default:
-                            break;
-                    }
+                    @namespace = ns;
                 }
+
+                var classNameTypedConstant = attributeData.GetNamedArgument("ClassName");
+                if (!classNameTypedConstant.IsNull
+                    && classNameTypedConstant.ToCSharpString().Trim('"') is string { Length: > 0 } cn)
+                {
+                    className = cn;
+                }
+
+                var methodNameTypedConstant = attributeData.GetNamedArgument("MethodName");
+                if (!methodNameTypedConstant.IsNull
+                    && methodNameTypedConstant.ToCSharpString().Trim('"') is string { Length: > 0 } mn)
+                {
+                    methodName = mn;
+                }
+
+                break; // only one AutoInjectConfigAttribute is expected
             }
         }
+
+        #endregion Read AutoInject configuration from assembly attribute
 
         var cb = new CodeBuilder();
 
@@ -197,74 +197,78 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         cb.CloseBrace();
         cb.AppendLine();
 
-        // helper to emit a lifetime-specific private method using CodeBuilder (reduces duplication)
+        // Helper to emit a lifetime-specific private method using CodeBuilder (reduces duplication)
         void EmitLifetimeMethod(string lifetime)
         {
             cb.AppendFormatLine("private static void Add{0}Services(IServiceCollection services)", lifetime);
             cb.OpenBrace();
 
-            // track emitted registrations to avoid duplicates
-            var dict = new Dictionary<(INamedTypeSymbol Implementation, string? ServiceKey), string>();
+            // Track emitted registrations to avoid duplicates instance resolutions
+            var duplicatedServiceDict = new Dictionary<(INamedTypeSymbol Implementation, string? ServiceKey), string>();
             foreach (var reg in registrations.Where(r => r.Lifetime == lifetime))
             {
-                var serviceKey = supportKeyedService ? reg.ServiceKeyLiteral : null;
-                if (dict.TryGetValue((reg.Implementation, serviceKey), out var exp))
+                if (duplicatedServiceDict.TryGetValue((reg.Implementation, reg.ServiceKey), out var providedService))
                 {
-                    if (serviceKey is null)
+                    // ServiceType will not be null here because duplicated registrations without ServiceType are impossible
+                    if (reg.ServiceType is null)
                     {
-                        if (reg.ServiceType is null)
-                        {
-                            cb.AppendFormatLine("services.TryAdd{0}<{1}>(sp => sp.GetRequiredService<{1}>());", lifetime, exp);
-                        }
-                        else
-                        {
-                            var svc = reg.ServiceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                            cb.AppendFormatLine("services.TryAdd{0}<{1}>(sp => ({1})sp.GetRequiredService<{2}>());", lifetime, svc, exp);
-                        }
+                        continue;
                     }
-                    else
+
+                    var svc = reg.ServiceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                    switch ((reg.ServiceKey, reg.Replace))
                     {
-                        if (reg.ServiceType is null)
-                        {
-                            cb.AppendFormatLine("services.TryAddKeyed{0}<{1}>({2}, (sp, key) => sp.GetRequiredKeyedService<{1}>(key));", lifetime, exp, serviceKey);
-                        }
-                        else
-                        {
-                            var svc = reg.ServiceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                            cb.AppendFormatLine("services.TryAddKeyed{0}<{1}>({2}, (sp, key) => ({1})sp.GetRequiredKeyedService<{3}>(key));", lifetime, svc, serviceKey, exp);
-                        }
+                        case (null, false):
+                            cb.AppendFormatLine("services.TryAdd{0}<{1}>(sp => ({1})sp.GetRequiredService<{2}>());", lifetime, svc, providedService);
+                            break;
+                        case (null, true):
+                            cb.AppendFormatLine("services.Replace(ServiceDescriptor.{0}<{1}>(sp => ({1})sp.GetRequiredService<{2}>()));", lifetime, svc, providedService);
+                            break;
+                        case (string key, false):
+                            cb.AppendFormatLine("services.TryAddKeyed{0}<{1}>({2}, (sp, key) => ({1})sp.GetRequiredKeyedService<{3}>(key));", lifetime, svc, key, providedService);
+                            break;
+                        case (string key, true):
+                            cb.AppendFormatLine("services.Replace(ServiceDescriptor.Keyed{0}<{1}>({2}, (sp, key) => ({1})sp.GetRequiredKeyedService<{3}>(key)));", lifetime, svc, key, providedService);
+                            break;
                     }
                 }
                 else
                 {
                     var impl = reg.Implementation.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                    if (serviceKey is null)
+                    if (reg.ServiceType is null)
                     {
-                        if (reg.ServiceType is null)
+                        // Self-registration ignores replace
+                        if (reg.ServiceKey is null)
                         {
                             cb.AppendFormatLine("services.TryAdd{0}<{1}>();", lifetime, impl);
-                            dict[(reg.Implementation, null)] = impl;
                         }
                         else
                         {
-                            var svc = reg.ServiceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                            cb.AppendFormatLine("services.TryAdd{0}<{1}, {2}>();", lifetime, svc, impl);
-                            dict[(reg.Implementation, null)] = svc;
+                            cb.AppendFormatLine("services.TryAddKeyed{0}<{1}>({2});", lifetime, impl, reg.ServiceKey);
                         }
+
+                        duplicatedServiceDict[(reg.Implementation, reg.ServiceKey)] = impl;
                     }
                     else
                     {
-                        if (reg.ServiceType is null)
+                        var svc = reg.ServiceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                        switch ((reg.ServiceKey, reg.Replace))
                         {
-                            cb.AppendFormatLine("services.TryAddKeyed{0}<{1}>({2});", lifetime, impl, serviceKey);
-                            dict[(reg.Implementation, serviceKey)] = impl;
+                            case (null, false):
+                                cb.AppendFormatLine("services.TryAdd{0}<{1}, {2}>();", lifetime, svc, impl);
+                                break;
+                            case (null, true):
+                                cb.AppendFormatLine("services.Replace(ServiceDescriptor.{0}<{1}, {2}>());", lifetime, svc, impl);
+                                break;
+                            case (string key, false):
+                                cb.AppendFormatLine("services.TryAddKeyed{0}<{1}, {2}>({3});", lifetime, svc, impl, key);
+                                break;
+                            case (string key, true):
+                                cb.AppendFormatLine("services.Replace(ServiceDescriptor.Keyed{0}<{1}, {2}>({3}));", lifetime, svc, impl, key);
+                                break;
                         }
-                        else
-                        {
-                            var svc = reg.ServiceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                            cb.AppendFormatLine("services.TryAddKeyed{0}<{1}, {2}>({3});", lifetime, svc, impl, serviceKey);
-                            dict[(reg.Implementation, serviceKey)] = svc;
-                        }
+
+                        duplicatedServiceDict[(reg.Implementation, reg.ServiceKey)] = svc;
                     }
                 }
             }
@@ -301,6 +305,5 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
     }
 
     private record ClassWithAttributes(INamedTypeSymbol ClassSymbol, ImmutableArray<AttributeData> Attributes);
-    private record RegistrationRecord(string Lifetime, INamedTypeSymbol? ServiceType, AttributeData AttributeData, string? ServiceKeyLiteral);
-    private record RegistrationInfo(INamedTypeSymbol Implementation, INamedTypeSymbol? ServiceType, string Lifetime, string? ServiceKeyLiteral);
+    private record RegistrationInfo(INamedTypeSymbol Implementation, string Lifetime, INamedTypeSymbol? ServiceType, string? ServiceKey, bool Replace);
 }

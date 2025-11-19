@@ -117,40 +117,60 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  
   <data name="DuplicateAttribute_Title" xml:space="preserve">
     <value>重复的服务注册特性</value>
   </data>
   <data name="DuplicateAttribute_Message" xml:space="preserve">
     <value>检测到针对相同服务类型和生命周期的重复服务注册特性。</value>
   </data>
+  
   <data name="ConflictingLifetime_Title" xml:space="preserve">
     <value>服务生命周期冲突</value>
   </data>
   <data name="ConflictingLifetime_Message" xml:space="preserve">
     <value>类不能使用多个相互冲突的服务生命周期进行注册。</value>
   </data>
+  
   <data name="ServiceTypeMismatch_Title" xml:space="preserve">
     <value>服务类型不匹配</value>
   </data>
   <data name="ServiceTypeMismatch_Message" xml:space="preserve">
     <value>服务类型 '{0}' 不是接口，或未被 '{1}' 实现。</value>
   </data>
+
+  <data name="InvalidConfig_Title" xml:space="preserve">
+    <value>无效的 AutoInject 配置</value>
+  </data>
+  <data name="InvalidConfig_Message" xml:space="preserve">
+    <value>AutoInjectConfig 的 {0} 值 '{1}' 不是有效的 {0}。它必须是有效的 C# 标识符。</value>
+  </data>
+
+  <data name="RequiredServiceTypeForReplace_Title" xml:space="preserve">
+    <value>服务类型缺失</value>
+  </data>
+  <data name="RequiredServiceTypeForReplace_Message" xml:space="preserve">
+    <value>使用替换服务注册时必须指定服务类型。</value>
+  </data>
+  
   <data name="NotSupportedKeyedService_Title" xml:space="preserve">
     <value>不支持 Keyed 服务注册</value>
   </data>
   <data name="NotSupportedKeyedService_Message" xml:space="preserve">
     <value>Keyed 服务注册需要“Microsoft.Extensions.DependencyInjection.Abstractions” 8.0.0 或更高版本。</value>
   </data>
+  
   <data name="ConflictingExtension_Title" xml:space="preserve">
     <value>存在冲突的 IServiceCollection 扩展方法</value>
   </data>
   <data name="ConflictingExtension_Message" xml:space="preserve">
     <value>配置的 AutoInject 扩展方法名 '{0}' 已被现有以 'this IServiceCollection' 为首参数的扩展方法使用。请在 AutoInjectConfig 中选择其他 MethodName 以避免冲突。</value>
   </data>
-  <data name="InvalidConfig_Title" xml:space="preserve">
-    <value>无效的 AutoInject 配置</value>
+
+  <data name="NotSupportedReplaceService_Title" xml:space="preserve">
+    <value>不支持替换服务注册</value>
   </data>
-  <data name="InvalidConfig_Message" xml:space="preserve">
-    <value>AutoInjectConfig 的 {0} 值 '{1}' 不是有效的 {0}。它必须是有效的 C# 标识符。</value>
+  <data name="NotSupportedReplaceService_Message" xml:space="preserve">
+    <value>替换服务注册需要“Microsoft.Extensions.DependencyInjection.Abstractions” 8.0.0 或更高版本。</value>
   </data>
 </root>

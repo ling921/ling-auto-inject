@@ -31,14 +31,24 @@ internal static class DiagnosticDescriptors
     public const string InvalidConfigId = "LAI004";
 
     /// <summary>
+    /// The diagnostic ID for rule <see cref="RequiredServiceTypeForReplaceRule"/>.
+    /// </summary>
+    public const string RequiredServiceTypeForReplaceId = "LAI005";
+
+    /// <summary>
     /// The diagnostic ID for rule <see cref="NotSupportedKeyedServiceRule"/>.
     /// </summary>
     public const string NotSupportedKeyedServiceId = "LAI101";
 
     /// <summary>
-    /// The diagnostic ID for conflicting extension methods rule.
+    /// The diagnostic ID for rule <see cref="ConflictingExtensionRule"/>.
     /// </summary>
     public const string ConflictingExtensionId = "LAI102";
+
+    /// <summary>
+    /// The diagnostic ID for rule <see cref="NotSupportedReplaceServiceRule"/>.
+    /// </summary>
+    public const string NotSupportedReplaceServiceId = "LAI103";
 
     /// <summary>
     /// The diagnostic rule for detecting duplicate attributes on a class.
@@ -97,6 +107,20 @@ internal static class DiagnosticDescriptors
         isEnabledByDefault: true);
 
     /// <summary>
+    /// The diagnostic rule for required service type for replace registrations.
+    /// <para>
+    /// Message format: <c>A service type must be specified when using Replace service registration.</c>
+    /// </para>
+    /// </summary>
+    public static readonly DiagnosticDescriptor RequiredServiceTypeForReplaceRule = new(
+        id: RequiredServiceTypeForReplaceId,
+        title: L(nameof(SR.RequiredServiceTypeForReplace_Title)),
+        messageFormat: L(nameof(SR.RequiredServiceTypeForReplace_Message)),
+        category: "Design",
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    /// <summary>
     /// The diagnostic rule for not supported keyed service registrations.
     /// <para>
     /// Message format: <c>Keyed service registrations are supported only for Microsoft.Extensions.DependencyInjection.Abstractions version 8.0.0 or higher.</c>
@@ -120,6 +144,20 @@ internal static class DiagnosticDescriptors
         id: ConflictingExtensionId,
         title: L(nameof(SR.ConflictingExtension_Title)),
         messageFormat: L(nameof(SR.ConflictingExtension_Message)),
+        category: "Design",
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
+
+    /// <summary>
+    /// The diagnostic rule for not supported replace service registrations.
+    /// <para>
+    /// Message format: <c>Replace service registrations are supported only for Microsoft.Extensions.DependencyInjection.Abstractions version 8.0.0 or higher.</c>
+    /// </para>
+    /// </summary>
+    public static readonly DiagnosticDescriptor NotSupportedReplaceServiceRule = new(
+        id: NotSupportedReplaceServiceId,
+        title: L(nameof(SR.NotSupportedReplaceService_Title)),
+        messageFormat: L(nameof(SR.NotSupportedReplaceService_Message)),
         category: "Design",
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);

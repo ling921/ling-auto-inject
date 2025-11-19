@@ -92,6 +92,11 @@ internal static class SourceCodes
                 /// Gets or sets the service key for keyed service registration.
                 /// </summary>
                 public object? ServiceKey { get; set; }
+
+                /// <summary>
+                /// Gets or sets a value indicating whether the generated registration should replace existing registrations for the service type.
+                /// </summary>
+                public bool Replace { get; set; }
             }
         }
         """;
@@ -141,6 +146,11 @@ internal static class SourceCodes
                 /// Gets or sets the service key for keyed service registration.
                 /// </summary>
                 public object? ServiceKey { get; set; }
+
+                /// <summary>
+                /// Gets or sets a value indicating whether the generated registration should replace existing registrations for the service type.
+                /// </summary>
+                public bool Replace { get; set; }
             }
         }
         """;
@@ -190,6 +200,11 @@ internal static class SourceCodes
                 /// Gets or sets the service key for keyed service registration.
                 /// </summary>
                 public object? ServiceKey { get; set; }
+
+                /// <summary>
+                /// Gets or sets a value indicating whether the generated registration should replace existing registrations for the service type.
+                /// </summary>
+                public bool Replace { get; set; }
             }
         }
         """;

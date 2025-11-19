@@ -28,7 +28,7 @@ public class InvalidAutoInjectConfigAnalyzerTests
     [InlineData("Namespace", "_MyNamespace")]
     [InlineData("Namespace", "My.Namespace")]
     [InlineData("Namespace", "My.Namespace.ABC")]
-    public async Task AutoInjectConfig_ValidArgument_ReportsNoDiagnostic(string parameter, string value)
+    public async Task Analyze_ValidAutoInjectConfig_NoDiagnostic(string parameter, string value)
     {
         var source = $"[assembly: Ling.AutoInject.AutoInjectConfig({parameter} = \"{value}\")]";
 
@@ -47,7 +47,7 @@ public class InvalidAutoInjectConfigAnalyzerTests
     [InlineData("Namespace", "My Namespace")]
     [InlineData("Namespace", "@MyNamespace")]
     [InlineData("Namespace", "My.Bad-Namespace")]
-    public async Task AutoInjectConfig_InvalidArgument_ReportsDiagnostic(string parameter, string value)
+    public async Task Analyze_InvalidAutoInjectConfig_ReportsDiagnostic(string parameter, string value)
     {
         var source = $"[assembly: Ling.AutoInject.AutoInjectConfig({parameter} = \"{value}\")]";
 
