@@ -136,13 +136,13 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         {
             var model = compilation.GetSemanticModel(tree);
             var root = tree.GetRoot();
-            var classDeclarations = root.DescendantNodes()
+            var classSymbols = root.DescendantNodes()
                 .OfType<ClassDeclarationSyntax>()
-                .Where(cds => cds.Modifiers.Any(SyntaxKind.StaticKeyword) && cds.Modifiers.Any(SyntaxKind.PartialKeyword));
-            foreach (var classDecl in classDeclarations)
+                .Where(cds => cds.Modifiers.Any(SyntaxKind.StaticKeyword) && cds.Modifiers.Any(SyntaxKind.PartialKeyword))
+                .Select(cd => model.GetDeclaredSymbol(cd))
+                .OfType<INamedTypeSymbol>();
+            foreach (var classSymbol in classSymbols)
             {
-                var classSymbol = model.GetDeclaredSymbol(classDecl);
-                if (classSymbol is null) continue;
                 foreach (var attributeData in classSymbol.GetAttributes())
                 {
                     if (!SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, symbols.AutoInjectExtensionsAttributeSymbol))
