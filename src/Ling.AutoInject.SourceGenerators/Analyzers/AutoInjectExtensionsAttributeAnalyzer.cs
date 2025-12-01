@@ -15,7 +15,7 @@ namespace Ling.AutoInject.SourceGenerators.Analyzers;
 /// Reports diagnostics for:
 /// <list type="number">
 /// <item>
-/// Method is not valid C# identifiers or contain invalid characters.
+/// Method name is not a valid C# identifier.
 /// </item>
 /// <item>
 /// Multiple 'AutoInjectExtensionsAttribute' found in the same assembly.
