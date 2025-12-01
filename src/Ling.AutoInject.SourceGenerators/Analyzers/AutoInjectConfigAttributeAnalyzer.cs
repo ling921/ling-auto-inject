@@ -24,7 +24,7 @@ namespace Ling.AutoInject.SourceGenerators.Analyzers;
 /// </para>
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-internal sealed class InvalidAutoInjectConfigAnalyzer : DiagnosticAnalyzer
+internal sealed class AutoInjectConfigAttributeAnalyzer : DiagnosticAnalyzer
 {
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [
         DiagnosticDescriptors.InvalidNamingRule,
