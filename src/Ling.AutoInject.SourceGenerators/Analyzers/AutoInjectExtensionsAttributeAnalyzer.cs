@@ -27,7 +27,7 @@ namespace Ling.AutoInject.SourceGenerators.Analyzers;
 /// </para>
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-internal sealed class ExtensionMethodAnalyzer : DiagnosticAnalyzer
+internal sealed class AutoInjectExtensionsAttributeAnalyzer : DiagnosticAnalyzer
 {
     /// <inheritdoc/>
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [

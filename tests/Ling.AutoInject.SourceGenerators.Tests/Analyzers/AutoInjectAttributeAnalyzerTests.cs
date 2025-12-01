@@ -17,7 +17,7 @@ public sealed class AutoInjectAttributeAnalyzerTests
     [InlineData("Singleton")]
     [InlineData("Scoped")]
     [InlineData("Transient")]
-    public async Task Analyze_DuplicatePositionalAttributes_ReportsDiagnostic(string lifetime)
+    public async Task DuplicatePositionalAttributes_ReportsDiagnostic(string lifetime)
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -42,7 +42,7 @@ public sealed class AutoInjectAttributeAnalyzerTests
     [InlineData("Singleton")]
     [InlineData("Scoped")]
     [InlineData("Transient")]
-    public async Task Analyze_DuplicatePositionalAndEmptyCtor_ReportsDiagnostic(string lifetime)
+    public async Task DuplicatePositionalAndEmptyCtor_ReportsDiagnostic(string lifetime)
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -67,7 +67,7 @@ public sealed class AutoInjectAttributeAnalyzerTests
     [InlineData("Singleton")]
     [InlineData("Scoped")]
     [InlineData("Transient")]
-    public async Task Analyze_DuplicateWithServiceType_ReportsDiagnostic(string lifetime)
+    public async Task DuplicateWithServiceType_ReportsDiagnostic(string lifetime)
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -94,7 +94,7 @@ public sealed class AutoInjectAttributeAnalyzerTests
     [InlineData("Singleton")]
     [InlineData("Scoped")]
     [InlineData("Transient")]
-    public async Task Analyze_DuplicateWithServiceKey_ReportsDiagnostic(string lifetime)
+    public async Task DuplicateWithServiceKey_ReportsDiagnostic(string lifetime)
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -120,7 +120,7 @@ public sealed class AutoInjectAttributeAnalyzerTests
     #region Conflicting Lifetimes
 
     [Fact]
-    public async Task Analyze_ConflictingLifetimes_TwoDifferent_ReportsDiagnostics()
+    public async Task ConflictingLifetimes_TwoDifferent_ReportsDiagnostic()
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -141,7 +141,7 @@ public sealed class AutoInjectAttributeAnalyzerTests
     }
 
     [Fact]
-    public async Task Analyze_ConflictingLifetimes_ThreeDifferent_ReportsDiagnostics()
+    public async Task ConflictingLifetimes_ThreeDifferent_ReportsDiagnostic()
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -173,7 +173,7 @@ public sealed class AutoInjectAttributeAnalyzerTests
     [InlineData("Singleton")]
     [InlineData("Scoped")]
     [InlineData("Transient")]
-    public async Task Analyze_ServiceTypeMismatch_WhenNotImplemented_ReportsDiagnostic(string lifetime)
+    public async Task ServiceTypeMismatch_WhenNotImplemented_ReportsDiagnostic(string lifetime)
     {
         var source = $$"""
             using Ling.AutoInject;

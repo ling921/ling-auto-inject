@@ -2,14 +2,14 @@
 using Ling.AutoInject.SourceGenerators.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
 using VerifyCS = Ling.AutoInject.SourceGenerators.Tests.Verifiers.CSharpAnalyzerVerifier<
-    Ling.AutoInject.SourceGenerators.Analyzers.ExtensionMethodAnalyzer>;
+    Ling.AutoInject.SourceGenerators.Analyzers.AutoInjectExtensionsAttributeAnalyzer>;
 
 namespace Ling.AutoInject.SourceGenerators.Tests.Analyzers;
 
 /// <summary>
-/// Tests for <see cref="ExtensionMethodAnalyzer"/>
+/// Tests for <see cref="AutoInjectExtensionsAttributeAnalyzer"/>.
 /// </summary>
-public sealed class ExtensionMethodAnalyzerTests
+public sealed class AutoInjectExtensionsAttributeAnalyzerTests
 {
     [Theory]
     [InlineData("MethodName")]
@@ -17,7 +17,7 @@ public sealed class ExtensionMethodAnalyzerTests
     [InlineData("Method_Name")]
     [InlineData("@MethodName")]
     [InlineData("_MethodName")]
-    public async Task Analyze_ValidAutoInjectConfig_NoDiagnostic(string value)
+    public async Task ValidMethodName_NoDiagnostic(string value)
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -39,7 +39,7 @@ public sealed class ExtensionMethodAnalyzerTests
     [InlineData("Method.Name")]
     [InlineData("Method@Name")]
     [InlineData("123MethodName")]
-    public async Task Analyze_InvalidAutoInjectConfig_ReportsDiagnostic(string value)
+    public async Task InvalidMethodName_ReportsDiagnostic(string value)
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -60,7 +60,7 @@ public sealed class ExtensionMethodAnalyzerTests
     }
 
     [Fact]
-    public async Task Analyze_MultipleExtensions_ReportsDiagnostic()
+    public async Task MultipleAttributeUsages_ReportsDiagnostic()
     {
         const string source = """
             using Ling.AutoInject;
@@ -85,7 +85,7 @@ public sealed class ExtensionMethodAnalyzerTests
     }
 
     [Fact]
-    public async Task Analyze_WithNonPartial_ReportsDiagnostic()
+    public async Task NonPartialClass_ReportsDiagnostic()
     {
         const string source = """
             using Ling.AutoInject;
@@ -106,7 +106,7 @@ public sealed class ExtensionMethodAnalyzerTests
     }
 
     [Fact]
-    public async Task Analyze_WithNonStatic_ReportsDiagnostic()
+    public async Task NonStaticClass_ReportsDiagnostic()
     {
         var source = """
             using Ling.AutoInject;

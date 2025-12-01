@@ -102,7 +102,7 @@ public class AutoInjectGeneratorTests
     }
 
     [Fact]
-    public async Task AutoInjectGenerator_WithCustomMethod_GeneratesExtensionClass()
+    public async Task WithCustomMethod_GeneratesExtensionClass()
     {
         const string source = """
             [assembly: Ling.AutoInject.AutoInjectConfig(MethodName = "AddCustomServices", ClassName = "ServiceExtensions", Namespace = "MyNamespace")]
@@ -170,7 +170,7 @@ public class AutoInjectGeneratorTests
     }
 
     [Fact]
-    public async Task AutoInjectGenerator_WithPartialClass_GeneratesExtensionClass()
+    public async Task WithPartialClass_GeneratesExtensionClass()
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -245,7 +245,7 @@ public class AutoInjectGeneratorTests
     }
 
     [Fact]
-    public async Task AutoInjectGenerator_WithPartialClassAnd_GeneratesExtensionClass()
+    public async Task WithPartialClassAndConfiguration_GeneratesExtensionClass()
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -325,7 +325,7 @@ public class AutoInjectGeneratorTests
     [InlineData("Singleton")]
     [InlineData("Scoped")]
     [InlineData("Transient")]
-    public async Task AutoInjectGenerator_SingleService_NoServiceType_GeneratesRegistration(string lifetime)
+    public async Task SingleService_NoServiceType_GeneratesRegistration(string lifetime)
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -361,7 +361,7 @@ public class AutoInjectGeneratorTests
     [InlineData("Singleton")]
     [InlineData("Scoped")]
     [InlineData("Transient")]
-    public async Task AutoInjectGenerator_SingleService_WithServiceType_GeneratesRegistration(string lifetime)
+    public async Task SingleService_WithServiceType_GeneratesRegistration(string lifetime)
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -399,7 +399,7 @@ public class AutoInjectGeneratorTests
     [InlineData("Singleton")]
     [InlineData("Scoped")]
     [InlineData("Transient")]
-    public async Task AutoInjectGenerator_SelfAndTyped_BothSpecified_GeneratesBothRegistrations(string lifetime)
+    public async Task SelfAndTyped_BothSpecified_GeneratesBothRegistrations(string lifetime)
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -447,7 +447,7 @@ public class AutoInjectGeneratorTests
     [InlineData("Singleton")]
     [InlineData("Scoped")]
     [InlineData("Transient")]
-    public async Task AutoInjectGenerator_MultipleAttributes_GeneratesImplementationRegistrations(string lifetime)
+    public async Task MultipleAttributes_GeneratesImplementationRegistrations(string lifetime)
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -496,7 +496,7 @@ public class AutoInjectGeneratorTests
     [InlineData("Singleton")]
     [InlineData("Scoped")]
     [InlineData("Transient")]
-    public async Task AutoInjectGenerator_NamedServiceType_GeneratesTypedRegistration(string lifetime)
+    public async Task NamedServiceType_GeneratesTypedRegistration(string lifetime)
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -536,7 +536,7 @@ public class AutoInjectGeneratorTests
     [InlineData("Singleton")]
     [InlineData("Scoped")]
     [InlineData("Transient")]
-    public async Task AutoInjectGenerator_KeyedSingleService_NoServiceType_GeneratesRegistration(string lifetime)
+    public async Task KeyedSingleService_NoServiceType_GeneratesRegistration(string lifetime)
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -584,7 +584,7 @@ public class AutoInjectGeneratorTests
     [InlineData("Singleton")]
     [InlineData("Scoped")]
     [InlineData("Transient")]
-    public async Task AutoInjectGenerator_KeyedSingleService_WithServiceType_GeneratesRegistration(string lifetime)
+    public async Task KeyedSingleService_WithServiceType_GeneratesRegistration(string lifetime)
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -634,7 +634,7 @@ public class AutoInjectGeneratorTests
     [InlineData("Singleton")]
     [InlineData("Scoped")]
     [InlineData("Transient")]
-    public async Task AutoInjectGenerator_Keyed_SelfAndTyped_BothSpecified_GeneratesRegistrations(string lifetime)
+    public async Task KeyedSelfAndTyped_BothSpecified_GeneratesRegistrations(string lifetime)
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -701,7 +701,7 @@ public class AutoInjectGeneratorTests
     }
 
     [Fact]
-    public async Task AutoInjectGenerator_KeyedTypedServices_AllLifetimes_GeneratesRegistrations()
+    public async Task KeyedTypedServices_AllLifetimes_GeneratesRegistrations()
     {
         const string source = """
             using Ling.AutoInject;
