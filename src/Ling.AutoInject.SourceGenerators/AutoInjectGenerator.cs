@@ -177,32 +177,31 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         if (!foundExtensionsAttribute)
         {
             // Read AutoInjectConfigAttribute from assembly
-            foreach (var attributeData in compilation.Assembly.GetAttributes())
+            var configAttribute = compilation.Assembly.GetAttributes()
+                .Where(ad => SymbolEqualityComparer.Default.Equals(ad.AttributeClass, symbols.AutoInjectConfigAttributeSymbol))
+                .FirstOrDefault();
+
+            if (configAttribute is not null)
             {
-                if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, symbols.AutoInjectConfigAttributeSymbol))
+                var namespaceTypedConstant = configAttribute.GetNamedArgument("Namespace");
+                if (!namespaceTypedConstant.IsNull
+                    && namespaceTypedConstant.ToCSharpString().Trim('"') is string { Length: > 0 } ns)
                 {
-                    var namespaceTypedConstant = attributeData.GetNamedArgument("Namespace");
-                    if (!namespaceTypedConstant.IsNull
-                        && namespaceTypedConstant.ToCSharpString().Trim('"') is string { Length: > 0 } ns)
-                    {
-                        @namespace = ns;
-                    }
+                    @namespace = ns;
+                }
 
-                    var classNameTypedConstant = attributeData.GetNamedArgument("ClassName");
-                    if (!classNameTypedConstant.IsNull
-                        && classNameTypedConstant.ToCSharpString().Trim('"') is string { Length: > 0 } cn)
-                    {
-                        className = cn;
-                    }
+                var classNameTypedConstant = configAttribute.GetNamedArgument("ClassName");
+                if (!classNameTypedConstant.IsNull
+                    && classNameTypedConstant.ToCSharpString().Trim('"') is string { Length: > 0 } cn)
+                {
+                    className = cn;
+                }
 
-                    var methodNameTypedConstant = attributeData.GetNamedArgument("MethodName");
-                    if (!methodNameTypedConstant.IsNull
-                        && methodNameTypedConstant.ToCSharpString().Trim('"') is string { Length: > 0 } mn)
-                    {
-                        methodName = mn;
-                    }
-
-                    break; // only one AutoInjectConfigAttribute is expected
+                var methodNameTypedConstant = configAttribute.GetNamedArgument("MethodName");
+                if (!methodNameTypedConstant.IsNull
+                    && methodNameTypedConstant.ToCSharpString().Trim('"') is string { Length: > 0 } mn)
+                {
+                    methodName = mn;
                 }
             }
         }
