@@ -11,7 +11,7 @@
 
 ## Usage
 
-For detailed usage instructions, including installation, attribute-based registration, configuration options, and advanced features like service replacement and `AutoInjectExtensionsAttribute`, see the [package README](src/Ling.AutoInject/README.md).
+For detailed usage instructions, including installation, attribute-based registration, etc. Please see the [package README](src/Ling.AutoInject/README.md).
 
 ## Development
 - Build: `dotnet build`
