@@ -207,7 +207,7 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
             }
         }
 
-        #endregion Read AutoInject
+        #endregion Read configuration
 
         var cb = new CodeBuilder();
 
