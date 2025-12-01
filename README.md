@@ -56,7 +56,60 @@ services.Add[MyAssembly]Services(); // default generated name
 services.AddCustomServices(); // when configured via AutoInjectConfig
 ```
 
-Notes
+## Advanced features
+
+### Replace existing registrations
+
+Use the `Replace` property to replace existing service registrations instead of using `TryAdd` methods:
+
+```csharp
+[SingletonService(typeof(IFoo), Replace = true)]
+public class MyService : IFoo { }
+```
+
+This generates `services.Replace(ServiceDescriptor.Singleton<IFoo, MyService>())` instead of `services.TryAddSingleton<IFoo, MyService>()`.
+
+### Using AutoInjectExtensionsAttribute
+
+Instead of using the assembly-level `AutoInjectConfig`, you can decorate a static partial class with `AutoInjectExtensionsAttribute` for more control:
+
+```csharp
+using Ling.AutoInject;
+
+namespace MyNamespace
+{
+    [AutoInjectExtensions(MethodName = "AddCustomServices")]
+    public static partial class MyServiceExtensions { }
+}
+```
+
+This generates a partial class with the specified method name in the same namespace as the decorated class.
+
+#### Including IConfiguration
+
+Use `IncludeConfiguration = true` to generate a method that accepts an `IConfiguration` parameter:
+
+```csharp
+[AutoInjectExtensions(MethodName = "AddCustomServices", IncludeConfiguration = true)]
+public static partial class MyServiceExtensions { }
+```
+
+This generates:
+
+```csharp
+public static IServiceCollection AddCustomServices(this IServiceCollection services, IConfiguration configuration)
+{
+    // ...
+    AddAdditionalServices(services, configuration);
+    return services;
+}
+
+static partial void AddAdditionalServices(IServiceCollection services, IConfiguration configuration);
+```
+
+You can implement the `AddAdditionalServices` partial method to add custom service registrations that require configuration.
+
+## Notes
 - When an attribute omits a service type, the implementation type itself is registered.
 - When an attribute specifies a service type, the generator registers the service interface to the implementation.
 - Keyed service APIs require `Microsoft.Extensions.DependencyInjection.Abstractions` 8.0.0 or later; the analyzers will warn when keyed registration is used but the target package does not support it.
