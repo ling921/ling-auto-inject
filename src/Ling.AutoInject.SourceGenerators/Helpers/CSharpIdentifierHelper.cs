@@ -24,14 +24,6 @@ internal static class CSharpIdentifierHelper
     {
         if (string.IsNullOrEmpty(identifier)) return false;
 
-        foreach (var segment in identifier!.Split('.'))
-        {
-            if (!IsValidIdentifier(segment))
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return identifier!.Split('.').All(IsValidIdentifier);
     }
 }
