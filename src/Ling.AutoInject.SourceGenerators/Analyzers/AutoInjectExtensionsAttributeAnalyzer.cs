@@ -65,21 +65,16 @@ internal sealed class AutoInjectExtensionsAttributeAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        if (attributeSyntax.ArgumentList is not null)
+        var methodNameArg = attributeSyntax.ArgumentList?.Arguments.FirstOrDefault(a => a.NameEquals?.Name.Identifier.Text == "MethodName");
+        if (methodNameArg is not null)
         {
-            foreach (var arg in attributeSyntax.ArgumentList.Arguments)
+            var constantValue = context.SemanticModel.GetConstantValue(methodNameArg.Expression, context.CancellationToken);
+            if (constantValue.HasValue
+                && constantValue.Value is string methodName
+                && !CSharpIdentifierHelper.IsValidIdentifierAllowAt(methodName))
             {
-                if (arg.NameEquals?.Name.Identifier.Text == "MethodName")
-                {
-                    var constantValue = context.SemanticModel.GetConstantValue(arg.Expression, context.CancellationToken);
-                    if (constantValue.HasValue
-                        && constantValue.Value is string methodName
-                        && !CSharpIdentifierHelper.IsValidIdentifierAllowAt(methodName))
-                    {
-                        var diagnostic = Diagnostic.Create(DiagnosticDescriptors.InvalidNamingRule, arg.GetLocation(), methodName, "method name");
-                        context.ReportDiagnostic(diagnostic);
-                    }
-                }
+                var diagnostic = Diagnostic.Create(DiagnosticDescriptors.InvalidNamingRule, methodNameArg.GetLocation(), methodName, "method name");
+                context.ReportDiagnostic(diagnostic);
             }
         }
 
