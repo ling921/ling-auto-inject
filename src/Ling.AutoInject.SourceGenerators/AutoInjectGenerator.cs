@@ -363,7 +363,7 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         cb.AppendLine();
         EmitLifetimeMethod("Transient");
 
-        // generate a patial method to allow customization
+        // generate a partial method to allow customization
         cb.AppendLine();
         cb.AppendLine("/// <summary>");
         cb.AppendLine("/// Adds additional services to the container.");
