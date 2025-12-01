@@ -14,6 +14,7 @@ internal static class CSharpIdentifierHelper
         if (string.IsNullOrEmpty(identifier)) return false;
         if (identifier![0] == '@')
         {
+            if (identifier.Length == 1) return false;
             var raw = identifier[1..];
             return SyntaxFacts.IsValidIdentifier(raw);
         }
