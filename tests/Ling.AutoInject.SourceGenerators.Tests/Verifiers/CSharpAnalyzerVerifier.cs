@@ -24,6 +24,7 @@ internal static class CSharpAnalyzerVerifier<TAnalyzer>
         test.ExpectedDiagnostics.AddRange(expected);
 
         test.TestState.Sources.Add(("AutoInjectConfigAttribute.g.cs", SourceCodes.AutoInjectConfigAttribute));
+        test.TestState.Sources.Add(("AutoInjectExtensionsAttribute.g.cs", SourceCodes.AutoInjectExtensionsAttribute));
         test.TestState.Sources.Add(("SingletonServiceAttribute.g.cs", SourceCodes.SingletonServiceAttribute));
         test.TestState.Sources.Add(("ScopedServiceAttribute.g.cs", SourceCodes.ScopedServiceAttribute));
         test.TestState.Sources.Add(("TransientServiceAttribute.g.cs", SourceCodes.TransientServiceAttribute));

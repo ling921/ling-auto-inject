@@ -9,6 +9,7 @@ internal static class Constants
     public const string ServiceCollectionServiceExtensionsFullName = "Microsoft.Extensions.DependencyInjection.ServiceCollectionServiceExtensions";
 
     public const string AutoInjectConfigAttributeFullName = "Ling.AutoInject.AutoInjectConfigAttribute";
+    public const string AutoInjectExtensionsAttributeFullName = "Ling.AutoInject.AutoInjectExtensionsAttribute";
 
     public const string TransientServiceAttributeFullName = "Ling.AutoInject.TransientServiceAttribute";
     public const string ScopedServiceAttributeFullName = "Ling.AutoInject.ScopedServiceAttribute";

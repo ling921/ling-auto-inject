@@ -139,11 +139,11 @@
     <value>The service type '{0}' is either not an interface or is not implemented by '{1}'.</value>
   </data>
 
-  <data name="InvalidConfig_Title" xml:space="preserve">
+  <data name="InvalidNaming_Title" xml:space="preserve">
     <value>Invalid AutoInject configuration</value>
   </data>
-  <data name="InvalidConfig_Message" xml:space="preserve">
-    <value>AutoInjectConfig's {0} value '{1}' is not a valid {0}. It must be a valid C# identifier.</value>
+  <data name="InvalidNaming_Message" xml:space="preserve">
+    <value>'{0}' is not a valid {1}. A valid C# identifier is required.</value>
   </data>
 
   <data name="RequiredServiceTypeForReplace_Title" xml:space="preserve">
@@ -151,6 +151,20 @@
   </data>
   <data name="RequiredServiceTypeForReplace_Message" xml:space="preserve">
     <value>A service type must be specified when using Replace service registration.</value>
+  </data>
+
+  <data name="MultipleExtensionsUsed_Title" xml:space="preserve">
+    <value>Multiple AutoInject extension declarations</value>
+  </data>
+  <data name="MultipleExtensionsUsed_Message" xml:space="preserve">
+    <value>Multiple 'AutoInjectExtensions' declarations were found in the assembly; only one is allowed.</value>
+  </data>
+
+  <data name="RequiredStaticPartialClass_Title" xml:space="preserve">
+    <value>Generated extension host must be static partial class</value>
+  </data>
+  <data name="RequiredStaticPartialClass_Message" xml:space="preserve">
+    <value>The target class '{0}' must be declared as 'static partial' to host generated extension methods.</value>
   </data>
 
   <data name="NotSupportedKeyedService_Title" xml:space="preserve">
@@ -172,5 +186,12 @@
   </data>
   <data name="NotSupportedReplaceService_Message" xml:space="preserve">
     <value>Replace service registrations require 'Microsoft.Extensions.DependencyInjection.Abstractions' version 8.0.0 or later.</value>
+  </data>
+
+  <data name="UnnecessaryConfigUsage_Title" xml:space="preserve">
+    <value>Unnecessary AutoInject configuration</value>
+  </data>
+  <data name="UnnecessaryConfigUsage_Message" xml:space="preserve">
+    <value>The assembly-level AutoInjectConfig attribute is unnecessary when an AutoInjectExtensions attribute is present.</value>
   </data>
 </root>

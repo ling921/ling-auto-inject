@@ -1,5 +1,5 @@
 ﻿using Ling.AutoInject.SourceGenerators.Diagnostics;
-using Ling.AutoInject.SourceGenerators.Helpers;
+using Ling.AutoInject.SourceGenerators.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -10,6 +10,20 @@ namespace Ling.AutoInject.SourceGenerators.Analyzers;
 
 /// <summary>
 /// Analyzer to report diagnostic when keyed services are used in unsupported versions.
+/// <para>
+/// Reports diagnostics for:
+/// <list type="number">
+/// <item>
+/// Keyed services used in unsupported versions.
+/// </item>
+/// <item>
+/// Replace services used in unsupported versions.
+/// </item>
+/// <item>
+/// Replace service used without specifying a service type.
+/// </item>
+/// </list>
+/// </para>
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 internal sealed class NotSupportedFeatureAnalyzer : DiagnosticAnalyzer

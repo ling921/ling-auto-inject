@@ -10,6 +10,7 @@ public class AutoInjectGeneratorTests
         await VerifyCS.VerifySourceGeneratorAsync(
             source,
             ("AutoInjectConfigAttribute.g.cs", SourceCodes.AutoInjectConfigAttribute),
+            ("AutoInjectExtensionsAttribute.g.cs", SourceCodes.AutoInjectExtensionsAttribute),
             ("SingletonServiceAttribute.g.cs", SourceCodes.SingletonServiceAttribute),
             ("ScopedServiceAttribute.g.cs", SourceCodes.ScopedServiceAttribute),
             ("TransientServiceAttribute.g.cs", SourceCodes.TransientServiceAttribute),
@@ -46,10 +47,13 @@ public class AutoInjectGeneratorTests
                 /// </summary>
                 [global::System.CodeDom.Compiler.GeneratedCode("Ling.AutoInject.SourceGenerators", "{{Constants.Version}}")]
                 [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-                public static class TestProject_AutoInjectGenerated
+                public static partial class TestProject_AutoInjectGenerated
                 {
                     /// <summary>
                     /// Adds services decorated with AutoInject attributes from the assembly 'TestProject' to the IServiceCollection.
+                    /// <para>
+                    /// Implements the 'AddAdditionalServices' partial method to further customize service registrations.
+                    /// </para>
                     /// </summary>
                     /// <param name="services">The IServiceCollection to add services to.</param>
                     /// <returns>The IServiceCollection for chaining.</returns>
@@ -60,6 +64,7 @@ public class AutoInjectGeneratorTests
                         AddSingletonServices(services);
                         AddScopedServices(services);
                         AddTransientServices(services);
+                        AddAdditionalServices(services);
 
                         return services;
                     }
@@ -75,6 +80,12 @@ public class AutoInjectGeneratorTests
                     private static void AddTransientServices(IServiceCollection services)
                     {{{transientServicesBody}}
                     }
+
+                    /// <summary>
+                    /// Adds additional services to the container.
+                    /// </summary>
+                    /// <param name="services">The service collection.</param>
+                    static partial void AddAdditionalServices(IServiceCollection services);
                 }
             }
 
@@ -83,6 +94,7 @@ public class AutoInjectGeneratorTests
         await VerifyCS.VerifySourceGeneratorAsync(
             source,
             ("AutoInjectConfigAttribute.g.cs", SourceCodes.AutoInjectConfigAttribute),
+            ("AutoInjectExtensionsAttribute.g.cs", SourceCodes.AutoInjectExtensionsAttribute),
             ("SingletonServiceAttribute.g.cs", SourceCodes.SingletonServiceAttribute),
             ("ScopedServiceAttribute.g.cs", SourceCodes.ScopedServiceAttribute),
             ("TransientServiceAttribute.g.cs", SourceCodes.TransientServiceAttribute),
@@ -90,7 +102,7 @@ public class AutoInjectGeneratorTests
     }
 
     [Fact]
-    public async Task AutoInjectGenerator_WithCustomMethod_GeneratesExtensionClass()
+    public async Task WithCustomMethod_GeneratesExtensionClass()
     {
         const string source = """
             [assembly: Ling.AutoInject.AutoInjectConfig(MethodName = "AddCustomServices", ClassName = "ServiceExtensions", Namespace = "MyNamespace")]
@@ -111,10 +123,13 @@ public class AutoInjectGeneratorTests
                 /// </summary>
                 [global::System.CodeDom.Compiler.GeneratedCode("Ling.AutoInject.SourceGenerators", "{{Constants.Version}}")]
                 [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
-                public static class ServiceExtensions
+                public static partial class ServiceExtensions
                 {
                     /// <summary>
                     /// Adds services decorated with AutoInject attributes from the assembly 'TestProject' to the IServiceCollection.
+                    /// <para>
+                    /// Implements the 'AddAdditionalServices' partial method to further customize service registrations.
+                    /// </para>
                     /// </summary>
                     /// <param name="services">The IServiceCollection to add services to.</param>
                     /// <returns>The IServiceCollection for chaining.</returns>
@@ -125,6 +140,7 @@ public class AutoInjectGeneratorTests
                         AddSingletonServices(services);
                         AddScopedServices(services);
                         AddTransientServices(services);
+                        AddAdditionalServices(services);
 
                         return services;
                     }
@@ -140,6 +156,164 @@ public class AutoInjectGeneratorTests
                     private static void AddTransientServices(IServiceCollection services)
                     {
                     }
+
+                    /// <summary>
+                    /// Adds additional services to the container.
+                    /// </summary>
+                    /// <param name="services">The service collection.</param>
+                    static partial void AddAdditionalServices(IServiceCollection services);
+                }
+            }
+
+            """;
+        await VerifyGeneratedCodeAsync(source, generatedCode);
+    }
+
+    [Fact]
+    public async Task WithPartialClass_GeneratesExtensionClass()
+    {
+        var source = $$"""
+            using Ling.AutoInject;
+
+            namespace Test
+            {
+                [AutoInjectExtensions(MethodName = "AddCustomServices")]
+                public static partial class MyServiceExtensions { }
+            }
+            """;
+
+        var generatedCode = $$"""
+            // <auto-generated />
+            
+            #pragma warning disable
+            #nullable enable annotations
+
+            using Microsoft.Extensions.DependencyInjection;
+            using Microsoft.Extensions.DependencyInjection.Extensions;
+
+            namespace Test
+            {
+                /// <summary>
+                /// Auto-generated extension methods for registering services with AutoInject attributes.
+                /// </summary>
+                [global::System.CodeDom.Compiler.GeneratedCode("Ling.AutoInject.SourceGenerators", "{{Constants.Version}}")]
+                [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+                static partial class MyServiceExtensions
+                {
+                    /// <summary>
+                    /// Adds services decorated with AutoInject attributes from the assembly 'TestProject' to the IServiceCollection.
+                    /// <para>
+                    /// Implements the 'AddAdditionalServices' partial method to further customize service registrations.
+                    /// </para>
+                    /// </summary>
+                    /// <param name="services">The IServiceCollection to add services to.</param>
+                    /// <returns>The IServiceCollection for chaining.</returns>
+                    public static IServiceCollection AddCustomServices(this IServiceCollection services)
+                    {
+                        if (services == null) throw new ArgumentNullException(nameof(services));
+
+                        AddSingletonServices(services);
+                        AddScopedServices(services);
+                        AddTransientServices(services);
+                        AddAdditionalServices(services);
+
+                        return services;
+                    }
+
+                    private static void AddSingletonServices(IServiceCollection services)
+                    {
+                    }
+ 
+                    private static void AddScopedServices(IServiceCollection services)
+                    {
+                    }
+ 
+                    private static void AddTransientServices(IServiceCollection services)
+                    {
+                    }
+
+                    /// <summary>
+                    /// Adds additional services to the container.
+                    /// </summary>
+                    /// <param name="services">The service collection.</param>
+                    static partial void AddAdditionalServices(IServiceCollection services);
+                }
+            }
+
+            """;
+        await VerifyGeneratedCodeAsync(source, generatedCode);
+    }
+
+    [Fact]
+    public async Task WithPartialClassAndConfiguration_GeneratesExtensionClass()
+    {
+        var source = $$"""
+            using Ling.AutoInject;
+
+            namespace Test
+            {
+                [AutoInjectExtensions(MethodName = "AddCustomServices", IncludeConfiguration = true)]
+                public static partial class MyServiceExtensions { }
+            }
+            """;
+
+        var generatedCode = $$"""
+            // <auto-generated />
+            
+            #pragma warning disable
+            #nullable enable annotations
+
+            using Microsoft.Extensions.DependencyInjection;
+            using Microsoft.Extensions.DependencyInjection.Extensions;
+
+            namespace Test
+            {
+                /// <summary>
+                /// Auto-generated extension methods for registering services with AutoInject attributes.
+                /// </summary>
+                [global::System.CodeDom.Compiler.GeneratedCode("Ling.AutoInject.SourceGenerators", "{{Constants.Version}}")]
+                [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+                static partial class MyServiceExtensions
+                {
+                    /// <summary>
+                    /// Adds services decorated with AutoInject attributes from the assembly 'TestProject' to the IServiceCollection.
+                    /// <para>
+                    /// Implements the 'AddAdditionalServices' partial method to further customize service registrations.
+                    /// </para>
+                    /// </summary>
+                    /// <param name="services">The IServiceCollection to add services to.</param>
+                    /// <param name="configuration">The configuration.</param>
+                    /// <returns>The IServiceCollection for chaining.</returns>
+                    public static IServiceCollection AddCustomServices(this IServiceCollection services, global::Microsoft.Extensions.Configuration.Abstractions.IConfiguration configuration)
+                    {
+                        if (services == null) throw new ArgumentNullException(nameof(services));
+
+                        AddSingletonServices(services);
+                        AddScopedServices(services);
+                        AddTransientServices(services);
+                        AddAdditionalServices(services, configuration);
+
+                        return services;
+                    }
+
+                    private static void AddSingletonServices(IServiceCollection services)
+                    {
+                    }
+ 
+                    private static void AddScopedServices(IServiceCollection services)
+                    {
+                    }
+ 
+                    private static void AddTransientServices(IServiceCollection services)
+                    {
+                    }
+
+                    /// <summary>
+                    /// Adds additional services to the container.
+                    /// </summary>
+                    /// <param name="services">The service collection.</param>
+                    /// <param name="configuration">The configuration.</param>
+                    static partial void AddAdditionalServices(IServiceCollection services, global::Microsoft.Extensions.Configuration.Abstractions.IConfiguration configuration);
                 }
             }
 
@@ -151,7 +325,7 @@ public class AutoInjectGeneratorTests
     [InlineData("Singleton")]
     [InlineData("Scoped")]
     [InlineData("Transient")]
-    public async Task AutoInjectGenerator_SingleService_NoServiceType_GeneratesRegistration(string lifetime)
+    public async Task SingleService_NoServiceType_GeneratesRegistration(string lifetime)
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -187,7 +361,7 @@ public class AutoInjectGeneratorTests
     [InlineData("Singleton")]
     [InlineData("Scoped")]
     [InlineData("Transient")]
-    public async Task AutoInjectGenerator_SingleService_WithServiceType_GeneratesRegistration(string lifetime)
+    public async Task SingleService_WithServiceType_GeneratesRegistration(string lifetime)
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -225,7 +399,7 @@ public class AutoInjectGeneratorTests
     [InlineData("Singleton")]
     [InlineData("Scoped")]
     [InlineData("Transient")]
-    public async Task AutoInjectGenerator_SelfAndTyped_BothSpecified_GeneratesBothRegistrations(string lifetime)
+    public async Task SelfAndTyped_BothSpecified_GeneratesBothRegistrations(string lifetime)
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -273,7 +447,7 @@ public class AutoInjectGeneratorTests
     [InlineData("Singleton")]
     [InlineData("Scoped")]
     [InlineData("Transient")]
-    public async Task AutoInjectGenerator_MultipleAttributes_GeneratesImplementationRegistrations(string lifetime)
+    public async Task MultipleAttributes_GeneratesImplementationRegistrations(string lifetime)
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -322,7 +496,7 @@ public class AutoInjectGeneratorTests
     [InlineData("Singleton")]
     [InlineData("Scoped")]
     [InlineData("Transient")]
-    public async Task AutoInjectGenerator_NamedServiceType_GeneratesTypedRegistration(string lifetime)
+    public async Task NamedServiceType_GeneratesTypedRegistration(string lifetime)
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -362,7 +536,7 @@ public class AutoInjectGeneratorTests
     [InlineData("Singleton")]
     [InlineData("Scoped")]
     [InlineData("Transient")]
-    public async Task AutoInjectGenerator_KeyedSingleService_NoServiceType_GeneratesRegistration(string lifetime)
+    public async Task KeyedSingleService_NoServiceType_GeneratesRegistration(string lifetime)
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -410,7 +584,7 @@ public class AutoInjectGeneratorTests
     [InlineData("Singleton")]
     [InlineData("Scoped")]
     [InlineData("Transient")]
-    public async Task AutoInjectGenerator_KeyedSingleService_WithServiceType_GeneratesRegistration(string lifetime)
+    public async Task KeyedSingleService_WithServiceType_GeneratesRegistration(string lifetime)
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -460,7 +634,7 @@ public class AutoInjectGeneratorTests
     [InlineData("Singleton")]
     [InlineData("Scoped")]
     [InlineData("Transient")]
-    public async Task AutoInjectGenerator_Keyed_SelfAndTyped_BothSpecified_GeneratesRegistrations(string lifetime)
+    public async Task KeyedSelfAndTyped_BothSpecified_GeneratesRegistrations(string lifetime)
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -527,7 +701,7 @@ public class AutoInjectGeneratorTests
     }
 
     [Fact]
-    public async Task AutoInjectGenerator_KeyedTypedServices_AllLifetimes_GeneratesRegistrations()
+    public async Task KeyedTypedServices_AllLifetimes_GeneratesRegistrations()
     {
         const string source = """
             using Ling.AutoInject;

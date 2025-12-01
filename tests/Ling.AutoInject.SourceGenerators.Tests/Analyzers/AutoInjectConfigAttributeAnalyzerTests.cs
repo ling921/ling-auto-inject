@@ -2,15 +2,22 @@ using Ling.AutoInject.SourceGenerators.Analyzers;
 using Ling.AutoInject.SourceGenerators.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
 using VerifyCS = Ling.AutoInject.SourceGenerators.Tests.Verifiers.CSharpAnalyzerVerifier<
-    Ling.AutoInject.SourceGenerators.Analyzers.InvalidAutoInjectConfigAnalyzer>;
+    Ling.AutoInject.SourceGenerators.Analyzers.AutoInjectConfigAttributeAnalyzer>;
 
 namespace Ling.AutoInject.SourceGenerators.Tests.Analyzers;
 
 /// <summary>
-/// Tests for <see cref="InvalidAutoInjectConfigAnalyzer"/>.
+/// Tests for <see cref="AutoInjectConfigAttributeAnalyzer"/>.
 /// </summary>
-public class InvalidAutoInjectConfigAnalyzerTests
+public sealed class AutoInjectConfigAttributeAnalyzerTests
 {
+    private readonly Dictionary<string, string> _map = new()
+    {
+        { "MethodName", "method name" },
+        { "ClassName", "class name" },
+        { "Namespace", "namespace" },
+    };
+
     [Theory]
     [InlineData("MethodName", "MethodName")]
     [InlineData("MethodName", "methodName")]
@@ -28,7 +35,7 @@ public class InvalidAutoInjectConfigAnalyzerTests
     [InlineData("Namespace", "_MyNamespace")]
     [InlineData("Namespace", "My.Namespace")]
     [InlineData("Namespace", "My.Namespace.ABC")]
-    public async Task Analyze_ValidAutoInjectConfig_NoDiagnostic(string parameter, string value)
+    public async Task ValidConfigValue_NoDiagnostic(string parameter, string value)
     {
         var source = $"[assembly: Ling.AutoInject.AutoInjectConfig({parameter} = \"{value}\")]";
 
@@ -47,13 +54,13 @@ public class InvalidAutoInjectConfigAnalyzerTests
     [InlineData("Namespace", "My Namespace")]
     [InlineData("Namespace", "@MyNamespace")]
     [InlineData("Namespace", "My.Bad-Namespace")]
-    public async Task Analyze_InvalidAutoInjectConfig_ReportsDiagnostic(string parameter, string value)
+    public async Task InvalidConfigValue_ReportsDiagnostic(string parameter, string value)
     {
         var source = $"[assembly: Ling.AutoInject.AutoInjectConfig({parameter} = \"{value}\")]";
 
-        var dr = new DiagnosticResult(DiagnosticDescriptors.InvalidConfigRule)
+        var dr = new DiagnosticResult(DiagnosticDescriptors.InvalidNamingRule)
             .WithLocation(1, parameter.Length + 48)
-            .WithArguments(parameter, value);
+            .WithArguments(value, _map[parameter]);
         await VerifyCS.VerifyAnalyzerAsync(source, dr);
     }
 }

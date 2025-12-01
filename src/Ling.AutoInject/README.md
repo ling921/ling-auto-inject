@@ -7,6 +7,8 @@
 - Attributes: `SingletonService`, `ScopedService`, `TransientService` for simple, declarative registration.
 - Optional service typing and keyed registration support.
 - Configurable generated method name, host class and namespace through an assembly-level `AutoInjectConfig` attribute.
+- Service replacement: use `Replace = true` to replace existing registrations instead of skipping when a service is already registered.
+- Class-level customization via `AutoInjectExtensionsAttribute` for control over method generation behavior, including optional `IConfiguration` parameter support.
 - Complementary analyzers to surface common mistakes and invalid configurations in the IDE.
 
 ## Installation
@@ -60,6 +62,59 @@ Install-Package Ling.AutoInject
 - If no service type is specified, the implementation type is registered as itself.
 - If a service type is specified, the generator registers the mapping from service interface to implementation.
 - Keyed registration requires the DI Abstractions package to support keyed APIs; analyzers warn when unsupported.
+
+## Advanced features
+
+### Replace existing registrations
+
+Use the `Replace` property to replace existing service registrations instead of using `TryAdd` methods:
+
+```csharp
+[SingletonService(typeof(IFoo), Replace = true)]
+public class MyService : IFoo { }
+```
+
+This generates `services.Replace(ServiceDescriptor.Singleton<IFoo, MyService>())` instead of `services.TryAddSingleton<IFoo, MyService>()`.
+
+### Using AutoInjectExtensionsAttribute
+
+Instead of using the assembly-level `AutoInjectConfig`, you can decorate a static partial class with `AutoInjectExtensionsAttribute` for more control:
+
+```csharp
+using Ling.AutoInject;
+
+namespace MyNamespace
+{
+    [AutoInjectExtensions(MethodName = "AddCustomServices")]
+    public static partial class MyServiceExtensions { }
+}
+```
+
+This generates a partial class with the specified method name in the same namespace as the decorated class.
+
+#### Including IConfiguration
+
+Use `IncludeConfiguration = true` to generate a method that accepts an `IConfiguration` parameter:
+
+```csharp
+[AutoInjectExtensions(MethodName = "AddCustomServices", IncludeConfiguration = true)]
+public static partial class MyServiceExtensions { }
+```
+
+This generates:
+
+```csharp
+public static IServiceCollection AddCustomServices(this IServiceCollection services, IConfiguration configuration)
+{
+    // ...
+    AddAdditionalServices(services, configuration);
+    return services;
+}
+
+static partial void AddAdditionalServices(IServiceCollection services, IConfiguration configuration);
+```
+
+You can implement the `AddAdditionalServices` partial method to add custom service registrations that require configuration.
 
 ## Planned features
 
