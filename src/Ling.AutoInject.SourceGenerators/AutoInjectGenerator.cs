@@ -52,6 +52,7 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
     private static void GenerateAttributes(IncrementalGeneratorPostInitializationContext context)
     {
         context.AddSource("AutoInjectConfigAttribute.g.cs", SourceCodes.AutoInjectConfigAttribute);
+        context.AddSource("AutoInjectExtensionsAttribute.g.cs", SourceCodes.AutoInjectExtensionsAttribute);
         context.AddSource("SingletonServiceAttribute.g.cs", SourceCodes.SingletonServiceAttribute);
         context.AddSource("ScopedServiceAttribute.g.cs", SourceCodes.ScopedServiceAttribute);
         context.AddSource("TransientServiceAttribute.g.cs", SourceCodes.TransientServiceAttribute);
@@ -69,6 +70,7 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         var targetVerison = compilation.FindReferenceAssemblyVersionByTypeMetadataName(Constants.ServiceCollectionServiceExtensionsFullName);
         var supportKeyedService = targetVerison > Constants.SupportKeyedServiceVersion;
 
+        // collect registrations
         foreach (var cwa in classes)
         {
             var classSymbol = cwa.ClassSymbol;
@@ -124,39 +126,88 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         var @namespace = compilation.GetNamespace(analyzerConfigOptionsProvider) ?? "Ling.AutoInject";
         var className = $"{sanitized}_AutoInjectGenerated";
         var methodName = $"Add{sanitized}Services";
+        var includeConfiguration = false;
 
-        #region Read AutoInject configuration from assembly attribute
+        #region Read configuration
 
-        foreach (var attributeData in compilation.Assembly.GetAttributes())
+        // Read first AutoInjectExtensionsAttribute from static partial class in assembly
+        var foundExtensionsAttribute = false;
+        foreach (var tree in compilation.SyntaxTrees)
         {
-            if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, symbols.AutoInjectConfigAttributeSymbol))
+            var model = compilation.GetSemanticModel(tree);
+            var root = tree.GetRoot();
+            var classDeclarations = root.DescendantNodes()
+                .OfType<ClassDeclarationSyntax>()
+                .Where(cds => cds.Modifiers.Any(SyntaxKind.StaticKeyword) && cds.Modifiers.Any(SyntaxKind.PartialKeyword));
+            foreach (var classDecl in classDeclarations)
             {
-                var namespaceTypedConstant = attributeData.GetNamedArgument("Namespace");
-                if (!namespaceTypedConstant.IsNull
-                    && namespaceTypedConstant.ToCSharpString().Trim('"') is string { Length: > 0 } ns)
+                var classSymbol = model.GetDeclaredSymbol(classDecl);
+                if (classSymbol is null) continue;
+                foreach (var attributeData in classSymbol.GetAttributes())
                 {
-                    @namespace = ns;
-                }
+                    if (!SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, symbols.AutoInjectExtensionsAttributeSymbol))
+                    {
+                        continue;
+                    }
 
-                var classNameTypedConstant = attributeData.GetNamedArgument("ClassName");
-                if (!classNameTypedConstant.IsNull
-                    && classNameTypedConstant.ToCSharpString().Trim('"') is string { Length: > 0 } cn)
+                    @namespace = classSymbol.ContainingNamespace.ToDisplayString();
+                    className = classSymbol.Name;
+                    var methodNameTypedConstant = attributeData.GetNamedArgument("MethodName");
+                    if (!methodNameTypedConstant.IsNull
+                        && methodNameTypedConstant.ToCSharpString().Trim('"') is string { Length: > 0 } mn)
+                    {
+                        methodName = mn;
+                    }
+                    var includeConfigurationTypedConstant = attributeData.GetNamedArgument("IncludeConfiguration");
+                    if (!includeConfigurationTypedConstant.IsNull
+                        && includeConfigurationTypedConstant.Value is bool ic
+                        && ic)
+                    {
+                        includeConfiguration = true;
+                    }
+
+                    foundExtensionsAttribute = true;
+                    break; // only one AutoInjectExtensionsAttribute is expected
+                }
+                if (foundExtensionsAttribute) break;
+            }
+            if (foundExtensionsAttribute) break;
+        }
+
+        if (!foundExtensionsAttribute)
+        {
+            // Read AutoInjectConfigAttribute from assembly
+            foreach (var attributeData in compilation.Assembly.GetAttributes())
+            {
+                if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, symbols.AutoInjectConfigAttributeSymbol))
                 {
-                    className = cn;
-                }
+                    var namespaceTypedConstant = attributeData.GetNamedArgument("Namespace");
+                    if (!namespaceTypedConstant.IsNull
+                        && namespaceTypedConstant.ToCSharpString().Trim('"') is string { Length: > 0 } ns)
+                    {
+                        @namespace = ns;
+                    }
 
-                var methodNameTypedConstant = attributeData.GetNamedArgument("MethodName");
-                if (!methodNameTypedConstant.IsNull
-                    && methodNameTypedConstant.ToCSharpString().Trim('"') is string { Length: > 0 } mn)
-                {
-                    methodName = mn;
-                }
+                    var classNameTypedConstant = attributeData.GetNamedArgument("ClassName");
+                    if (!classNameTypedConstant.IsNull
+                        && classNameTypedConstant.ToCSharpString().Trim('"') is string { Length: > 0 } cn)
+                    {
+                        className = cn;
+                    }
 
-                break; // only one AutoInjectConfigAttribute is expected
+                    var methodNameTypedConstant = attributeData.GetNamedArgument("MethodName");
+                    if (!methodNameTypedConstant.IsNull
+                        && methodNameTypedConstant.ToCSharpString().Trim('"') is string { Length: > 0 } mn)
+                    {
+                        methodName = mn;
+                    }
+
+                    break; // only one AutoInjectConfigAttribute is expected
+                }
             }
         }
 
-        #endregion Read AutoInject configuration from assembly attribute
+        #endregion Read AutoInject
 
         var cb = new CodeBuilder();
 
@@ -177,21 +228,50 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         cb.AppendLine("/// </summary>");
         cb.AppendFormatLine("[global::System.CodeDom.Compiler.GeneratedCode(\"Ling.AutoInject.SourceGenerators\", \"{0}\")]", Constants.Version);
         cb.AppendLine("[global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]");
-        cb.AppendFormatLine("public static class {0}", className);
+        if (foundExtensionsAttribute)
+        {
+            cb.AppendFormatLine("static partial class {0}", className);
+        }
+        else
+        {
+            cb.AppendFormatLine("public static partial class {0}", className);
+        }
         cb.OpenBrace();
 
         cb.AppendLine("/// <summary>");
         cb.AppendFormatLine("/// Adds services decorated with AutoInject attributes from the assembly '{0}' to the IServiceCollection.", assemblyName);
+        cb.AppendLine("/// <para>");
+        cb.AppendLine("/// Implements the 'AddAdditionalServices' partial method to further customize service registrations.");
+        cb.AppendLine("/// </para>");
         cb.AppendLine("/// </summary>");
         cb.AppendLine("/// <param name=\"services\">The IServiceCollection to add services to.</param>");
+        if (includeConfiguration)
+        {
+            cb.AppendLine("/// <param name=\"configuration\">The configuration.</param>");
+        }
         cb.AppendLine("/// <returns>The IServiceCollection for chaining.</returns>");
-        cb.AppendFormatLine("public static IServiceCollection {0}(this IServiceCollection services)", methodName);
+        if (includeConfiguration)
+        {
+            cb.AppendFormatLine("public static IServiceCollection {0}(this IServiceCollection services, global::Microsoft.Extensions.Configuration.Abstractions.IConfiguration configuration)", methodName);
+        }
+        else
+        {
+            cb.AppendFormatLine("public static IServiceCollection {0}(this IServiceCollection services)", methodName);
+        }
         cb.OpenBrace();
         cb.AppendLine("if (services == null) throw new ArgumentNullException(nameof(services));");
         cb.AppendLine();
         cb.AppendLine("AddSingletonServices(services);");
         cb.AppendLine("AddScopedServices(services);");
         cb.AppendLine("AddTransientServices(services);");
+        if (includeConfiguration)
+        {
+            cb.AppendLine("AddAdditionalServices(services, configuration);");
+        }
+        else
+        {
+            cb.AppendLine("AddAdditionalServices(services);");
+        }
         cb.AppendLine();
         cb.AppendLine("return services;");
         cb.CloseBrace();
@@ -282,6 +362,22 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         EmitLifetimeMethod("Scoped");
         cb.AppendLine();
         EmitLifetimeMethod("Transient");
+
+        // generate a patial method to allow customization
+        cb.AppendLine();
+        cb.AppendLine("/// <summary>");
+        cb.AppendLine("/// Adds additional services to the container.");
+        cb.AppendLine("/// </summary>");
+        cb.AppendLine("/// <param name=\"services\">The service collection.</param>");
+        if (includeConfiguration)
+        {
+            cb.AppendLine("/// <param name=\"configuration\">The configuration.</param>");
+            cb.AppendLine("static partial void AddAdditionalServices(IServiceCollection services, global::Microsoft.Extensions.Configuration.Abstractions.IConfiguration configuration);");
+        }
+        else
+        {
+            cb.AppendLine("static partial void AddAdditionalServices(IServiceCollection services);");
+        }
 
         // close class & namespace
         cb.CloseBrace();

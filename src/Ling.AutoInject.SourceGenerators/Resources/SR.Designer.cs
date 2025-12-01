@@ -115,20 +115,38 @@ namespace Ling.AutoInject.SourceGenerators.Resources {
         }
         
         /// <summary>
-        ///   查找类似 AutoInjectConfig&apos;s {0} value &apos;{1}&apos; is not a valid {0}. It must be a valid C# identifier. 的本地化字符串。
+        ///   查找类似 &apos;{0}&apos; is not a valid {1}. A valid C# identifier is required. 的本地化字符串。
         /// </summary>
-        internal static string InvalidConfig_Message {
+        internal static string InvalidNaming_Message {
             get {
-                return ResourceManager.GetString("InvalidConfig_Message", resourceCulture);
+                return ResourceManager.GetString("InvalidNaming_Message", resourceCulture);
             }
         }
         
         /// <summary>
         ///   查找类似 Invalid AutoInject configuration 的本地化字符串。
         /// </summary>
-        internal static string InvalidConfig_Title {
+        internal static string InvalidNaming_Title {
             get {
-                return ResourceManager.GetString("InvalidConfig_Title", resourceCulture);
+                return ResourceManager.GetString("InvalidNaming_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Multiple &apos;AutoInjectExtensions&apos; declarations were found in the assembly; only one is allowed. 的本地化字符串。
+        /// </summary>
+        internal static string MultipleExtensionsUsed_Message {
+            get {
+                return ResourceManager.GetString("MultipleExtensionsUsed_Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Multiple AutoInject extension declarations 的本地化字符串。
+        /// </summary>
+        internal static string MultipleExtensionsUsed_Title {
+            get {
+                return ResourceManager.GetString("MultipleExtensionsUsed_Title", resourceCulture);
             }
         }
         
@@ -187,6 +205,24 @@ namespace Ling.AutoInject.SourceGenerators.Resources {
         }
         
         /// <summary>
+        ///   查找类似 The target class &apos;{0}&apos; must be declared as &apos;static partial&apos; to host generated extension methods. 的本地化字符串。
+        /// </summary>
+        internal static string RequiredStaticPartialClass_Message {
+            get {
+                return ResourceManager.GetString("RequiredStaticPartialClass_Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Generated extension host must be static partial class 的本地化字符串。
+        /// </summary>
+        internal static string RequiredStaticPartialClass_Title {
+            get {
+                return ResourceManager.GetString("RequiredStaticPartialClass_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 The service type &apos;{0}&apos; is either not an interface or is not implemented by &apos;{1}&apos;. 的本地化字符串。
         /// </summary>
         internal static string ServiceTypeMismatch_Message {
@@ -201,6 +237,24 @@ namespace Ling.AutoInject.SourceGenerators.Resources {
         internal static string ServiceTypeMismatch_Title {
             get {
                 return ResourceManager.GetString("ServiceTypeMismatch_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 The assembly-level AutoInjectConfig attribute is unnecessary when an AutoInjectExtensions attribute is present. 的本地化字符串。
+        /// </summary>
+        internal static string UnnecessaryConfigUsage_Message {
+            get {
+                return ResourceManager.GetString("UnnecessaryConfigUsage_Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 Unnecessary AutoInject configuration 的本地化字符串。
+        /// </summary>
+        internal static string UnnecessaryConfigUsage_Title {
+            get {
+                return ResourceManager.GetString("UnnecessaryConfigUsage_Title", resourceCulture);
             }
         }
     }

@@ -139,11 +139,11 @@
     <value>服务类型 '{0}' 不是接口，或未被 '{1}' 实现。</value>
   </data>
 
-  <data name="InvalidConfig_Title" xml:space="preserve">
+  <data name="InvalidNaming_Title" xml:space="preserve">
     <value>无效的 AutoInject 配置</value>
   </data>
-  <data name="InvalidConfig_Message" xml:space="preserve">
-    <value>AutoInjectConfig 的 {0} 值 '{1}' 不是有效的 {0}。它必须是有效的 C# 标识符。</value>
+  <data name="InvalidNaming_Message" xml:space="preserve">
+    <value>'{0}' 不是有效的 {1}。它必须是有效的 C# 标识符。</value>
   </data>
 
   <data name="RequiredServiceTypeForReplace_Title" xml:space="preserve">
@@ -151,6 +151,20 @@
   </data>
   <data name="RequiredServiceTypeForReplace_Message" xml:space="preserve">
     <value>使用替换服务注册时必须指定服务类型。</value>
+  </data>
+
+  <data name="MultipleExtensionsUsed_Title" xml:space="preserve">
+    <value>存在多个 AutoInject 扩展声明</value>
+  </data>
+  <data name="MultipleExtensionsUsed_Message" xml:space="preserve">
+    <value>程序集内发现了多个 'AutoInjectExtensions' 声明；仅允许一个。</value>
+  </data>
+
+  <data name="RequiredStaticPartialClass_Title" xml:space="preserve">
+    <value>生成的扩展宿主必须为 static partial 类</value>
+  </data>
+  <data name="RequiredStaticPartialClass_Message" xml:space="preserve">
+    <value>目标类 '{0}' 必须声明为 'static partial' 以承载生成的扩展方法。</value>
   </data>
   
   <data name="NotSupportedKeyedService_Title" xml:space="preserve">
@@ -172,5 +186,12 @@
   </data>
   <data name="NotSupportedReplaceService_Message" xml:space="preserve">
     <value>替换服务注册需要“Microsoft.Extensions.DependencyInjection.Abstractions” 8.0.0 或更高版本。</value>
+  </data>
+
+  <data name="UnnecessaryConfigUsage_Title" xml:space="preserve">
+    <value>不必要的 AutoInject 配置</value>
+  </data>
+  <data name="UnnecessaryConfigUsage_Message" xml:space="preserve">
+    <value>当程序集存在 AutoInjectExtensions 特性时，程序集级别的 AutoInjectConfig 特性是不必要的。</value>
   </data>
 </root>

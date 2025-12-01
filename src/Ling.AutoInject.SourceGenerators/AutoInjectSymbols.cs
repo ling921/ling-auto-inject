@@ -5,6 +5,7 @@ namespace Ling.AutoInject.SourceGenerators;
 internal sealed class AutoInjectSymbols(Compilation compilation)
 {
     public INamedTypeSymbol AutoInjectConfigAttributeSymbol { get; } = compilation.GetTypeByMetadataName(Constants.AutoInjectConfigAttributeFullName)!;
+    public INamedTypeSymbol AutoInjectExtensionsAttributeSymbol { get; } = compilation.GetTypeByMetadataName(Constants.AutoInjectExtensionsAttributeFullName)!;
 
     public INamedTypeSymbol SingletonServiceAttributeSymbol { get; } = compilation.GetTypeByMetadataName(Constants.SingletonServiceAttributeFullName)!;
     public INamedTypeSymbol ScopedServiceAttributeSymbol { get; } = compilation.GetTypeByMetadataName(Constants.ScopedServiceAttributeFullName)!;

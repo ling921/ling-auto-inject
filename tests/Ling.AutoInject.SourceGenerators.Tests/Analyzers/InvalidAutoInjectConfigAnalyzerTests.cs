@@ -11,6 +11,13 @@ namespace Ling.AutoInject.SourceGenerators.Tests.Analyzers;
 /// </summary>
 public class InvalidAutoInjectConfigAnalyzerTests
 {
+    private readonly Dictionary<string, string> _map = new()
+    {
+        { "MethodName", "method name" },
+        { "ClassName", "class name" },
+        { "Namespace", "namespace" },
+    };
+
     [Theory]
     [InlineData("MethodName", "MethodName")]
     [InlineData("MethodName", "methodName")]
@@ -51,9 +58,9 @@ public class InvalidAutoInjectConfigAnalyzerTests
     {
         var source = $"[assembly: Ling.AutoInject.AutoInjectConfig({parameter} = \"{value}\")]";
 
-        var dr = new DiagnosticResult(DiagnosticDescriptors.InvalidConfigRule)
+        var dr = new DiagnosticResult(DiagnosticDescriptors.InvalidNamingRule)
             .WithLocation(1, parameter.Length + 48)
-            .WithArguments(parameter, value);
+            .WithArguments(value, _map[parameter]);
         await VerifyCS.VerifyAnalyzerAsync(source, dr);
     }
 }

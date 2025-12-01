@@ -5,8 +5,7 @@
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <PackageOutputPath>.nuget</PackageOutputPath>
     <IncludeSymbols>false</IncludeSymbols>
-    <!-- Empty package, only for referencing the generator -->
-    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IncludeBuildOutput>true</IncludeBuildOutput>
   </PropertyGroup>
 
   <!-- Package Settings -->
@@ -34,7 +33,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
   </ItemGroup>
 
-  <!--Package source generator into analyzers directory-->
+  <!-- Package source generator into analyzers directory -->
   <Target Name="_AddAnalyzer" BeforeTargets="GetTargetPath">
     <PropertyGroup>
       <GeneratorOutDir>$(ProjectDir)..\Ling.AutoInject.SourceGenerators\bin\$(Configuration)\netstandard2.0\</GeneratorOutDir>
