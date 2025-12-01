@@ -15,7 +15,7 @@ public sealed class NotSupportedFeatureAnalyzerTests
     [InlineData("Singleton")]
     [InlineData("Scoped")]
     [InlineData("Transient")]
-    public async Task Analyze_NoUnsupportedFeature_NoDiagnostic(string lifetime)
+    public async Task NoUnsupportedFeature_NoDiagnostic(string lifetime)
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -36,7 +36,7 @@ public sealed class NotSupportedFeatureAnalyzerTests
     [InlineData("Singleton")]
     [InlineData("Scoped")]
     [InlineData("Transient")]
-    public async Task Analyze_KeyedService_OnUnsupportedVersion_ReportsNotSupportedKeyedService(string lifetime)
+    public async Task KeyedService_OnUnsupportedVersion_ReportsDiagnostic(string lifetime)
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -63,7 +63,7 @@ public sealed class NotSupportedFeatureAnalyzerTests
     [InlineData("Singleton")]
     [InlineData("Scoped")]
     [InlineData("Transient")]
-    public async Task Analyze_ReplaceService_OnUnsupportedVersion_ReportsNotSupportedReplaceService(string lifetime)
+    public async Task ReplaceService_OnUnsupportedVersion_ReportsDiagnostic(string lifetime)
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -94,7 +94,7 @@ public sealed class NotSupportedFeatureAnalyzerTests
     [InlineData("Singleton")]
     [InlineData("Scoped")]
     [InlineData("Transient")]
-    public async Task Analyze_ReplaceTrue_NoServiceType_ReportsRequiredServiceTypeForReplace(string lifetime)
+    public async Task ReplaceTrue_NoServiceType_ReportsDiagnostic(string lifetime)
     {
         var source = $$"""
             using Ling.AutoInject;
@@ -119,7 +119,7 @@ public sealed class NotSupportedFeatureAnalyzerTests
     [InlineData("Singleton")]
     [InlineData("Scoped")]
     [InlineData("Transient")]
-    public async Task Analyze_ReplaceFalse_NoServiceType_NoDiagnostic(string lifetime)
+    public async Task ReplaceFalse_NoServiceType_NoDiagnostic(string lifetime)
     {
         var source = $$"""
             using Ling.AutoInject;
