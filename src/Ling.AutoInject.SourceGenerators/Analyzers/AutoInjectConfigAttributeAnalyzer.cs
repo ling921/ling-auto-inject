@@ -15,7 +15,7 @@ namespace Ling.AutoInject.SourceGenerators.Analyzers;
 /// Reports diagnostics for:
 /// <list type="number">
 /// <item>
-/// Arguments are not valid C# identifiers or contain invalid characters.
+/// Argument values are not valid C# identifiers.
 /// </item>
 /// <item>
 /// Unnecessary usage of 'AutoInjectConfigAttribute' when 'AutoInjectExtensionsAttribute' is present.
