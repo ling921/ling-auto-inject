@@ -8,6 +8,8 @@
 - Roslyn analyzers that validate attribute usage and `AutoInjectConfig` values at design time.
 - Optional keyed service support when the DI abstractions package supports it.
 - Configurable generated method, class and namespace via an assembly-level `AutoInjectConfig` attribute.
+- Service replacement support: use `Replace = true` to replace existing registrations instead of try-add semantics.
+- Class-level customization via `AutoInjectExtensionsAttribute` for more control over generated extension methods, including optional `IConfiguration` parameter support.
 
 ## Usage
 
