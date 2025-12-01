@@ -7,6 +7,8 @@
 - Attributes: `SingletonService`, `ScopedService`, `TransientService` for simple, declarative registration.
 - Optional service typing and keyed registration support.
 - Configurable generated method name, host class and namespace through an assembly-level `AutoInjectConfig` attribute.
+- Service replacement: use `Replace = true` to replace existing registrations instead of skipping when a service is already registered.
+- Class-level customization via `AutoInjectExtensionsAttribute` for control over method generation behavior, including optional `IConfiguration` parameter support.
 - Complementary analyzers to surface common mistakes and invalid configurations in the IDE.
 
 ## Installation
