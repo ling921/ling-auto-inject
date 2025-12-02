@@ -178,8 +178,7 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         {
             // Read AutoInjectConfigAttribute from assembly
             var configAttribute = compilation.Assembly.GetAttributes()
-                .Where(ad => SymbolEqualityComparer.Default.Equals(ad.AttributeClass, symbols.AutoInjectConfigAttributeSymbol))
-                .FirstOrDefault();
+                .FirstOrDefault(ad => SymbolEqualityComparer.Default.Equals(ad.AttributeClass, symbols.AutoInjectConfigAttributeSymbol));
 
             if (configAttribute is not null)
             {
@@ -251,7 +250,7 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         cb.AppendLine("/// <returns>The IServiceCollection for chaining.</returns>");
         if (includeConfiguration)
         {
-            cb.AppendFormatLine("public static IServiceCollection {0}(this IServiceCollection services, global::Microsoft.Extensions.Configuration.Abstractions.IConfiguration configuration)", methodName);
+            cb.AppendFormatLine("public static IServiceCollection {0}(this IServiceCollection services, global::Microsoft.Extensions.Configuration.IConfiguration configuration)", methodName);
         }
         else
         {
@@ -371,7 +370,7 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         if (includeConfiguration)
         {
             cb.AppendLine("/// <param name=\"configuration\">The configuration.</param>");
-            cb.AppendLine("static partial void AddAdditionalServices(IServiceCollection services, global::Microsoft.Extensions.Configuration.Abstractions.IConfiguration configuration);");
+            cb.AppendLine("static partial void AddAdditionalServices(IServiceCollection services, global::Microsoft.Extensions.Configuration.IConfiguration configuration);");
         }
         else
         {
