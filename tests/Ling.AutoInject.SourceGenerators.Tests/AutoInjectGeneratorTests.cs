@@ -284,7 +284,7 @@ public class AutoInjectGeneratorTests
                     /// <param name="services">The IServiceCollection to add services to.</param>
                     /// <param name="configuration">The configuration.</param>
                     /// <returns>The IServiceCollection for chaining.</returns>
-                    public static IServiceCollection AddCustomServices(this IServiceCollection services, global::Microsoft.Extensions.Configuration.Abstractions.IConfiguration configuration)
+                    public static IServiceCollection AddCustomServices(this IServiceCollection services, global::Microsoft.Extensions.Configuration.IConfiguration configuration)
                     {
                         if (services == null) throw new ArgumentNullException(nameof(services));
 
@@ -313,7 +313,7 @@ public class AutoInjectGeneratorTests
                     /// </summary>
                     /// <param name="services">The service collection.</param>
                     /// <param name="configuration">The configuration.</param>
-                    static partial void AddAdditionalServices(IServiceCollection services, global::Microsoft.Extensions.Configuration.Abstractions.IConfiguration configuration);
+                    static partial void AddAdditionalServices(IServiceCollection services, global::Microsoft.Extensions.Configuration.IConfiguration configuration);
                 }
             }
 
