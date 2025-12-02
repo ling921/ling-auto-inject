@@ -9,7 +9,7 @@
 
   <PropertyGroup>
     <VersionPrefix>1.1.0</VersionPrefix>
-    <VersionSuffix>beta-20251201143733</VersionSuffix>
+    <VersionSuffix>beta-20251202093909</VersionSuffix>
   </PropertyGroup>
 
   <ItemGroup>
