@@ -147,7 +147,8 @@ internal static class DiagnosticDescriptors
         messageFormat: L(nameof(SR.MultipleExtensionsUsed_Message)),
         category: "Design",
         DiagnosticSeverity.Error,
-        isEnabledByDefault: true);
+        isEnabledByDefault: true,
+        customTags: ["CompilationEnd"]);
 
     /// <summary>
     /// Diagnostic rule for required static partial class for generation.
