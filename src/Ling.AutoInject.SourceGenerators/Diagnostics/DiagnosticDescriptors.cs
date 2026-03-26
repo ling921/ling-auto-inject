@@ -148,7 +148,7 @@ internal static class DiagnosticDescriptors
         category: "Design",
         DiagnosticSeverity.Error,
         isEnabledByDefault: true,
-        customTags: ["CompilationEnd"]);
+        customTags: [WellKnownDiagnosticTags.CompilationEnd]);
 
     /// <summary>
     /// Diagnostic rule for required static partial class for generation.
