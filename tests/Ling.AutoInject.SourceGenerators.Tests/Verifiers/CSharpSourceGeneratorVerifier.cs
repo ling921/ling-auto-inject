@@ -30,7 +30,9 @@ internal static partial class CSharpSourceGeneratorVerifier<TSourceGenerator>
 
         foreach (var (fileName, generatedCode) in generatedSources)
         {
-            var sourceText = NewLineRegex().Replace(generatedCode, Environment.NewLine);
+            var sourceText = fileName.EndsWith("Attribute.g.cs", StringComparison.Ordinal)
+                ? generatedCode
+                : NewLineRegex().Replace(generatedCode, Environment.NewLine);
 
             test.TestState.GeneratedSources.Add((typeof(TSourceGenerator), fileName, SourceText.From(sourceText, Encoding.UTF8)));
         }
