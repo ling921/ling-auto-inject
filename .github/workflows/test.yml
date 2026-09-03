@@ -48,7 +48,7 @@ jobs:
           dotnet test tests/Ling.AutoInject.SourceGenerators.Tests/Ling.AutoInject.SourceGenerators.Tests.csproj --framework ${{ matrix.framework }} --configuration Release --no-build --verbosity detailed 2>&1 | tee test-output.log
           exit_code=${PIPESTATUS[0]}
           if [ "$exit_code" -ne 0 ]; then
-            detail=$(tail -n 30 test-output.log | tr '\n' ' ')
+            detail=$(grep -Ei -A 5 'failed|error message|expected|actual' test-output.log | tail -n 80 | tr '\n' ' ')
             echo "::error title=Test command failed::$detail"
           fi
           exit "$exit_code"
