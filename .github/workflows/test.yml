@@ -41,7 +41,16 @@ jobs:
         run: dotnet build Ling.AutoInject.slnx --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test tests/Ling.AutoInject.SourceGenerators.Tests/Ling.AutoInject.SourceGenerators.Tests.csproj --framework ${{ matrix.framework }} --configuration Release --no-build --verbosity normal
+        shell: bash
+        run: |
+          set -o pipefail
+          dotnet test tests/Ling.AutoInject.SourceGenerators.Tests/Ling.AutoInject.SourceGenerators.Tests.csproj --framework ${{ matrix.framework }} --configuration Release --no-build --verbosity detailed 2>&1 | tee test-output.log
+          exit_code=${PIPESTATUS[0]}
+          if [ "$exit_code" -ne 0 ]; then
+            detail=$(tail -n 30 test-output.log | tr '\n' ' ')
+            echo "::error title=Test command failed::$detail"
+          fi
+          exit "$exit_code"
 
       - name: Run sample
         if: matrix.framework == 'net10.0'
