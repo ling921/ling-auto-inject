@@ -1,25 +1,46 @@
-name: Run Tests
+name: Build and test
 
 on:
+  workflow_dispatch:
+  push:
+    branches: [master, develop]
   pull_request:
-    branches:
-      - master
+    branches: [master, develop]
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
+    name: test
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - uses: ./.github/actions/setup-env
 
-      - name: Restore dependencies
-        run: dotnet restore
+      - name: Restore
+        run: dotnet restore Ling.AutoInject.slnx
 
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build Ling.AutoInject.slnx --configuration Release --no-restore
 
-      - name: Run tests
-        run: dotnet test --configuration Release --no-build --verbosity normal
+      - name: Test
+        run: dotnet test Ling.AutoInject.slnx --configuration Release --no-build --verbosity normal
+
+      - name: Run sample
+        run: dotnet run --project samples/Ling.AutoInject.Sample/Ling.AutoInject.Sample.csproj --configuration Release --no-build
+
+      - name: Pack
+        run: dotnet pack src/Ling.AutoInject/Ling.AutoInject.csproj --configuration Release --no-build --output artifacts/packages
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ling.AutoInject-nupkg
+          path: artifacts/packages/*.nupkg
+          if-no-files-found: error

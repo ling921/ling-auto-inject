@@ -1,35 +1,43 @@
-name: Publish NuGet Package
+name: Publish NuGet package
 
 on:
   release:
     types:
       - published
 
-env:
-  NuGetDirectory: ${{ github.workspace }}/nuget
-
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - uses: ./.github/actions/setup-env
 
-      - name: Restore dependencies
-        run: dotnet restore
+      - name: Restore
+        run: dotnet restore Ling.AutoInject.slnx
 
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build Ling.AutoInject.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test Ling.AutoInject.slnx --configuration Release --no-build --verbosity normal
+
+      - name: Run sample
+        run: dotnet run --project samples/Ling.AutoInject.Sample/Ling.AutoInject.Sample.csproj --configuration Release --no-build
 
       - name: Pack
-        run: dotnet pack ./src/Ling.AutoInject/Ling.AutoInject.csproj --configuration Release --no-build --output ${{ env.NuGetDirectory }} -p:NoWarn=NU5118
+        run: dotnet pack src/Ling.AutoInject/Ling.AutoInject.csproj --configuration Release --no-build --output artifacts/packages
+
+      - name: NuGet login
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ling921
 
       - name: Publish to NuGet
-        run: |
-          for file in ${{ env.NuGetDirectory }}/*.{nupkg,snupkg}; do
-            if [ -f "$file" ]; then
-              dotnet nuget push "$file" --api-key "${{ secrets.NUGET_APIKEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
-            fi
-          done
+        run: dotnet nuget push artifacts/packages/*.nupkg --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate

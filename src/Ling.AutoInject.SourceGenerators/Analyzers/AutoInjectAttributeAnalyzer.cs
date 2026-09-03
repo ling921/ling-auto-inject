@@ -1,4 +1,4 @@
-﻿using Ling.AutoInject.SourceGenerators.Diagnostics;
+using Ling.AutoInject.SourceGenerators.Diagnostics;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -32,6 +32,7 @@ internal sealed class AutoInjectAttributeAnalyzer : DiagnosticAnalyzer
         DiagnosticDescriptors.DuplicateAttributeRule,
         DiagnosticDescriptors.ConflictingLifetimeRule,
         DiagnosticDescriptors.ServiceTypeMismatchRule,
+        DiagnosticDescriptors.UnsupportedRegistrationTargetRule,
     ];
 
     /// <inheritdoc/>
@@ -55,6 +56,22 @@ internal sealed class AutoInjectAttributeAnalyzer : DiagnosticAnalyzer
             .ToList();
         if (attrs.Count == 0)
         {
+            return;
+        }
+
+        var unsupportedKind = GetUnsupportedRegistrationKind(typeSymbol);
+        if (unsupportedKind is not null)
+        {
+            foreach (var attr in attrs)
+            {
+                var location = attr.ApplicationSyntaxReference?.GetSyntax(context.CancellationToken).GetLocation();
+                context.ReportDiagnostic(Diagnostic.Create(
+                    DiagnosticDescriptors.UnsupportedRegistrationTargetRule,
+                    location,
+                    unsupportedKind,
+                    typeSymbol.Name));
+            }
+
             return;
         }
 
@@ -146,6 +163,39 @@ internal sealed class AutoInjectAttributeAnalyzer : DiagnosticAnalyzer
         }
 
         return (serviceType, serviceKey);
+    }
+
+    private static string? GetUnsupportedRegistrationKind(INamedTypeSymbol typeSymbol)
+    {
+        if (typeSymbol.IsStatic)
+        {
+            return "static";
+        }
+
+        if (typeSymbol.IsAbstract)
+        {
+            return "abstract";
+        }
+
+        if (HasTypeParameters(typeSymbol))
+        {
+            return "generic";
+        }
+
+        return typeSymbol.TypeKind != TypeKind.Class ? "non-class" : null;
+    }
+
+    private static bool HasTypeParameters(INamedTypeSymbol typeSymbol)
+    {
+        for (var current = typeSymbol; current is not null; current = current.ContainingType)
+        {
+            if (current.TypeParameters.Length > 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private sealed record AttributeInfo(INamedTypeSymbol? ServiceType, string? ServiceKey);

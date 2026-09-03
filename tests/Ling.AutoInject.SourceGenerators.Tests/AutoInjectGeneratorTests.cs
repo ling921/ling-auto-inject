@@ -1,10 +1,29 @@
-﻿using VerifyCS = Ling.AutoInject.SourceGenerators.Tests.Verifiers.CSharpSourceGeneratorVerifier<
+using VerifyCS = Ling.AutoInject.SourceGenerators.Tests.Verifiers.CSharpSourceGeneratorVerifier<
     Ling.AutoInject.SourceGenerators.AutoInjectGenerator>;
 
 namespace Ling.AutoInject.SourceGenerators.Tests;
 
 public class AutoInjectGeneratorTests
 {
+    [Fact]
+    public async Task RecordClass_GeneratesRegistration()
+    {
+        const string source = """
+            using Ling.AutoInject;
+
+            namespace Test;
+
+            [ScopedService]
+            public sealed record MyService;
+            """;
+
+        await VerifyGeneratedCodeAsync(
+            source,
+            expectedSingletonServices: string.Empty,
+            expectedScopedServices: "services.TryAddScoped<global::Test.MyService>();",
+            expectedTransientServices: string.Empty);
+    }
+
     private static async Task VerifyGeneratedCodeAsync(string source, string expectedGeneratedCode)
     {
         await VerifyCS.VerifySourceGeneratorAsync(

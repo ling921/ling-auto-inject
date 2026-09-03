@@ -22,12 +22,12 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         context.RegisterPostInitializationOutput(GenerateAttributes);
 
         var classDeclarations = context.SyntaxProvider.CreateSyntaxProvider(
-            predicate: static (node, _) => node is ClassDeclarationSyntax cds && cds.AttributeLists.Count > 0,
+            predicate: static (node, _) => node is TypeDeclarationSyntax tds && tds.AttributeLists.Count > 0,
             transform: static (ctx, _) =>
             {
-                var classDecl = (ClassDeclarationSyntax)ctx.Node;
+                var typeDecl = (TypeDeclarationSyntax)ctx.Node;
                 var model = ctx.SemanticModel;
-                if (model.GetDeclaredSymbol(classDecl) is INamedTypeSymbol namedTypeSymbol)
+                if (model.GetDeclaredSymbol(typeDecl) is INamedTypeSymbol namedTypeSymbol)
                 {
                     var symbols = new AutoInjectSymbols(model.Compilation);
                     var attrs = namedTypeSymbol.GetAttributes()
@@ -68,12 +68,17 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         var symbols = new AutoInjectSymbols(compilation);
 
         var targetVerison = compilation.FindReferenceAssemblyVersionByTypeMetadataName(Constants.ServiceCollectionServiceExtensionsFullName);
-        var supportKeyedService = targetVerison > Constants.SupportKeyedServiceVersion;
+        var supportKeyedService = targetVerison >= Constants.SupportKeyedServiceVersion;
 
         // collect registrations
         foreach (var cwa in classes)
         {
             var classSymbol = cwa.ClassSymbol;
+            if (!IsSupportedRegistrationType(classSymbol))
+            {
+                continue;
+            }
+
             var attrData = cwa.Attributes;
 
             var regList = new List<RegistrationInfo>();
@@ -150,7 +155,11 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
                         continue;
                     }
 
-                    @namespace = classSymbol.ContainingNamespace.ToDisplayString();
+                    var containingNamespace = classSymbol.ContainingNamespace;
+                    var namespaceName = containingNamespace.ToDisplayString();
+                    @namespace = containingNamespace.IsGlobalNamespace || namespaceName == "<global namespace>"
+                        ? string.Empty
+                        : namespaceName;
                     className = classSymbol.Name;
                     var methodNameTypedConstant = attributeData.GetNamedArgument("MethodName");
                     if (!methodNameTypedConstant.IsNull
@@ -218,8 +227,12 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         cb.AppendLine("using Microsoft.Extensions.DependencyInjection.Extensions;");
         cb.AppendLine();
 
-        cb.AppendFormatLine("namespace {0}", @namespace);
-        cb.OpenBrace();
+        var hasNamespace = !string.IsNullOrWhiteSpace(@namespace);
+        if (hasNamespace)
+        {
+            cb.AppendFormatLine("namespace {0}", @namespace);
+            cb.OpenBrace();
+        }
 
         cb.AppendLine("/// <summary>");
         cb.AppendLine("/// Auto-generated extension methods for registering services with AutoInject attributes.");
@@ -379,7 +392,10 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
 
         // close class & namespace
         cb.CloseBrace();
-        cb.CloseBrace();
+        if (hasNamespace)
+        {
+            cb.CloseBrace();
+        }
 
         var hintName = $"AutoInject_{sanitized}.g.cs";
         context.AddSource(hintName, SourceText.From(cb.ToString(), Encoding.UTF8));
@@ -396,6 +412,27 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         if (sb.Length == 0) sb.Append("A");
         if (char.IsDigit(sb[0])) sb.Insert(0, '_');
         return sb.ToString();
+    }
+
+    private static bool IsSupportedRegistrationType(INamedTypeSymbol typeSymbol)
+    {
+        return typeSymbol.TypeKind == TypeKind.Class
+            && !typeSymbol.IsAbstract
+            && !typeSymbol.IsStatic
+            && !HasTypeParameters(typeSymbol);
+    }
+
+    private static bool HasTypeParameters(INamedTypeSymbol typeSymbol)
+    {
+        for (var current = typeSymbol; current is not null; current = current.ContainingType)
+        {
+            if (current.TypeParameters.Length > 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private record ClassWithAttributes(INamedTypeSymbol ClassSymbol, ImmutableArray<AttributeData> Attributes);
