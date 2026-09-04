@@ -1,5 +1,7 @@
 # Ling.AutoInject [![NuGet](https://img.shields.io/nuget/v/Ling.AutoInject.svg)](https://www.nuget.org/packages/Ling.AutoInject/)
 
+[English](README.md) | [简体中文](README.zh-CN.md)
+
 `Ling.AutoInject` provides attribute-driven dependency injection registrations plus a source generator that emits `IServiceCollection` extension methods for automatic registration.
 
 ## Features

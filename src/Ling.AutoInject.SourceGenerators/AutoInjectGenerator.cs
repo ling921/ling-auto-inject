@@ -4,7 +4,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.Text;
 using System.Collections.Immutable;
 using System.Text;
 
@@ -51,11 +50,11 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
 
     private static void GenerateAttributes(IncrementalGeneratorPostInitializationContext context)
     {
-        context.AddSource("AutoInjectConfigAttribute.g.cs", SourceCodes.AutoInjectConfigAttribute);
-        context.AddSource("AutoInjectExtensionsAttribute.g.cs", SourceCodes.AutoInjectExtensionsAttribute);
-        context.AddSource("SingletonServiceAttribute.g.cs", SourceCodes.SingletonServiceAttribute);
-        context.AddSource("ScopedServiceAttribute.g.cs", SourceCodes.ScopedServiceAttribute);
-        context.AddSource("TransientServiceAttribute.g.cs", SourceCodes.TransientServiceAttribute);
+        context.AddSourceWithCrlf("AutoInjectConfigAttribute.g.cs", SourceCodes.AutoInjectConfigAttribute);
+        context.AddSourceWithCrlf("AutoInjectExtensionsAttribute.g.cs", SourceCodes.AutoInjectExtensionsAttribute);
+        context.AddSourceWithCrlf("SingletonServiceAttribute.g.cs", SourceCodes.SingletonServiceAttribute);
+        context.AddSourceWithCrlf("ScopedServiceAttribute.g.cs", SourceCodes.ScopedServiceAttribute);
+        context.AddSourceWithCrlf("TransientServiceAttribute.g.cs", SourceCodes.TransientServiceAttribute);
     }
 
     private void Execute(
@@ -398,7 +397,7 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         }
 
         var hintName = $"AutoInject_{sanitized}.g.cs";
-        context.AddSource(hintName, SourceText.From(cb.ToString(), Encoding.UTF8));
+        context.AddSourceWithCrlf(hintName, cb.ToString());
     }
 
     private static string SanitizeIdentifier(string name)

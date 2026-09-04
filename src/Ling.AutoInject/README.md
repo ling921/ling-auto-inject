@@ -1,5 +1,7 @@
 # Ling.AutoInject
 
+[English](README.md) | [简体中文](README.zh-CN.md)
+
 `Ling.AutoInject` provides attribute-driven registration helpers and integrates with a source generator to emit `IServiceCollection` extension methods that register services discovered via attributes at compile time.
 
 ## Features

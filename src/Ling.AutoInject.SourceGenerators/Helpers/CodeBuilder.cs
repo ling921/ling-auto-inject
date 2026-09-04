@@ -9,6 +9,7 @@ namespace Ling.AutoInject.SourceGenerators.Helpers;
 [DebuggerDisplay("Length: {Length}, {GetText()}")]
 internal sealed class CodeBuilder
 {
+    private const string NewLine = "\r\n";
     private int _indentLevel;
     private bool _newLine;
     private readonly StringBuilder _sb;
@@ -88,7 +89,7 @@ internal sealed class CodeBuilder
         if (appendSemicolon)
             _sb.Append(";");
 
-        _sb.AppendLine();
+        _sb.Append(NewLine);
         _newLine = true;
         return this;
     }
@@ -146,13 +147,14 @@ internal sealed class CodeBuilder
     {
         if (text is null)
         {
-            _sb.AppendLine();
+            _sb.Append(NewLine);
             _newLine = true;
             return this;
         }
 
         EnsureIndent();
-        _sb.AppendLine(text);
+        _sb.Append(text);
+        _sb.Append(NewLine);
         _newLine = true;
         return this;
     }
@@ -162,7 +164,7 @@ internal sealed class CodeBuilder
     /// </summary>
     public CodeBuilder AppendLine()
     {
-        _sb.AppendLine();
+        _sb.Append(NewLine);
         _newLine = true;
         return this;
     }
@@ -186,7 +188,7 @@ internal sealed class CodeBuilder
         if (format is null) throw new ArgumentNullException(nameof(format));
         EnsureIndent();
         _sb.AppendFormat(format, args);
-        _sb.AppendLine();
+        _sb.Append(NewLine);
         _newLine = true;
         return this;
     }
