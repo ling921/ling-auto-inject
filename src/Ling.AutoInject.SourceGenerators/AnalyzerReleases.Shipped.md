@@ -2,6 +2,15 @@
 ; https://github.com/dotnet/roslyn-analyzers/blob/main/src/Microsoft.CodeAnalysis.Analyzers/ReleaseTrackingAnalyzers.Help.md
 
 
+## Release 1.2.0
+
+### New Rules
+
+Rule ID | Category | Severity | Notes
+--------|----------|----------|--------------------
+LAI008  |  Design  |  Error   | Registration targets cannot be abstract, static, generic, or non-class types.
+
+
 ## Release 1.1.0
 
 ### New Rules
