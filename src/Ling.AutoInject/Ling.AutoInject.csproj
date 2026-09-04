@@ -51,6 +51,7 @@
   <!-- Package Content -->
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="" />
+    <None Include="README.zh-CN.md" Pack="true" PackagePath="" />
     <None Include="..\..\assets\icon.png" Visible="false" Pack="true" PackagePath="" />
   </ItemGroup>
 
