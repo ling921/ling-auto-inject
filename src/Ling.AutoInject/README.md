@@ -6,10 +6,11 @@
 
 ## Features
 
-- Attributes: `SingletonService`, `ScopedService`, `TransientService` for simple, declarative registration.
+- Attributes: unified `AutoInject`, plus `SingletonService`, `ScopedService`, and `TransientService` for simple, declarative registration.
 - Optional service typing and keyed registration support.
 - Configurable generated method name, host class and namespace through an assembly-level `AutoInjectConfig` attribute.
 - Service replacement: use `Replace = true` to replace existing registrations instead of skipping when a service is already registered.
+- Registration strategies: `Add`, `TryAdd`, `Replace`, and `TryAddEnumerable`; optionally register every implemented interface.
 - Class-level customization via `AutoInjectExtensionsAttribute` for control over method generation behavior, including optional `IConfiguration` parameter support.
 - Complementary analyzers to surface common mistakes and invalid configurations in the IDE.
 
@@ -67,6 +68,22 @@ Install-Package Ling.AutoInject
 - A runnable record-type registration example is available in the repository under `samples/Ling.AutoInject.Sample`.
 
 ## Advanced features
+
+### Unified registration attribute
+
+`AutoInject` combines lifetime, service type, and strategy in one attribute. The existing lifetime-specific attributes remain supported.
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+
+[AutoInject(ServiceLifetime.Scoped, RegisterImplementedInterfaces = true)]
+public class FooService : IFoo, IBar { }
+
+[AutoInject(ServiceLifetime.Singleton, typeof(ICache), Strategy = ServiceRegistrationStrategy.Replace)]
+public class MemoryCache : ICache { }
+```
+
+`RegisterImplementedInterfaces = true` registers every implemented interface. Keyed registrations cannot use `TryAddEnumerable`; the analyzer reports that invalid combination.
 
 ### Replace existing registrations
 
@@ -130,13 +147,6 @@ The project will continue to evolve around three priorities: generator correctne
 - Extend discovery to support record class types and extension hosts declared in the global namespace.
 - Strengthen validation for duplicate registrations, conflicting lifetimes, service type mismatches, and configuration conflicts.
 - Add runtime integration tests in addition to generated-source snapshot tests.
-
-### Version 1.3 — Registration capabilities
-
-- Introduce an optional unified `AutoInject` attribute while preserving the existing lifetime-specific attributes.
-- Support registration of all implemented interfaces through declarative configuration.
-- Add explicit registration strategies, including `Add`, `TryAdd`, `Replace`, and `TryAddEnumerable`.
-- Improve keyed service support with stronger key validation and more consistent registration semantics.
 
 ### Version 1.4 — Configuration and modularization
 

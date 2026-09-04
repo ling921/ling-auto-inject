@@ -30,6 +30,7 @@ public class AutoInjectGeneratorTests
             source,
             ("AutoInjectConfigAttribute.g.cs", SourceCodes.AutoInjectConfigAttribute),
             ("AutoInjectExtensionsAttribute.g.cs", SourceCodes.AutoInjectExtensionsAttribute),
+            ("AutoInjectAttribute.g.cs", SourceCodes.AutoInjectAttribute),
             ("SingletonServiceAttribute.g.cs", SourceCodes.SingletonServiceAttribute),
             ("ScopedServiceAttribute.g.cs", SourceCodes.ScopedServiceAttribute),
             ("TransientServiceAttribute.g.cs", SourceCodes.TransientServiceAttribute),
@@ -114,6 +115,7 @@ public class AutoInjectGeneratorTests
             source,
             ("AutoInjectConfigAttribute.g.cs", SourceCodes.AutoInjectConfigAttribute),
             ("AutoInjectExtensionsAttribute.g.cs", SourceCodes.AutoInjectExtensionsAttribute),
+            ("AutoInjectAttribute.g.cs", SourceCodes.AutoInjectAttribute),
             ("SingletonServiceAttribute.g.cs", SourceCodes.SingletonServiceAttribute),
             ("ScopedServiceAttribute.g.cs", SourceCodes.ScopedServiceAttribute),
             ("TransientServiceAttribute.g.cs", SourceCodes.TransientServiceAttribute),
@@ -412,6 +414,82 @@ public class AutoInjectGeneratorTests
             expectedScopedServices,
             expectedTransientServices
         );
+    }
+
+    [Fact]
+    public async Task UnifiedAttribute_GeneratesRegistration()
+    {
+        const string source = """
+            using Ling.AutoInject;
+            using Microsoft.Extensions.DependencyInjection;
+
+            namespace Test;
+
+            public interface IFoo { }
+
+            [AutoInject(ServiceLifetime.Scoped, typeof(IFoo))]
+            public sealed class MyService : IFoo;
+            """;
+
+        await VerifyGeneratedCodeAsync(
+            source,
+            expectedSingletonServices: string.Empty,
+            expectedScopedServices: "services.TryAddScoped<global::Test.IFoo, global::Test.MyService>();",
+            expectedTransientServices: string.Empty);
+    }
+
+    [Fact]
+    public async Task RegisterImplementedInterfaces_GeneratesAllInterfaceRegistrations()
+    {
+        const string source = """
+            using Ling.AutoInject;
+            using Microsoft.Extensions.DependencyInjection;
+
+            namespace Test;
+
+            public interface IFoo { }
+            public interface IBar { }
+
+            [AutoInject(ServiceLifetime.Singleton, RegisterImplementedInterfaces = true)]
+            public sealed class MyService : IFoo, IBar;
+            """;
+
+        await VerifyGeneratedCodeAsync(
+            source,
+            expectedSingletonServices: """
+                services.TryAddSingleton<global::Test.IFoo, global::Test.MyService>();
+                services.TryAddSingleton<global::Test.IBar>(sp => (global::Test.IBar)sp.GetRequiredService<global::Test.IFoo>());
+                """,
+            expectedScopedServices: string.Empty,
+            expectedTransientServices: string.Empty);
+    }
+
+    [Theory]
+    [InlineData("Add", "services.AddSingleton<global::Test.IFoo, global::Test.MyService>();")]
+    [InlineData("TryAdd", "services.TryAddSingleton<global::Test.IFoo, global::Test.MyService>();")]
+    [InlineData("Replace", "services.Replace(ServiceDescriptor.Singleton<global::Test.IFoo, global::Test.MyService>());")]
+    [InlineData("TryAddEnumerable", "services.TryAddEnumerable(ServiceDescriptor.Singleton<global::Test.IFoo, global::Test.MyService>());")]
+    public async Task RegistrationStrategy_GeneratesExpectedRegistration(string strategy, string expectedRegistration)
+    {
+        var source = $$"""
+            using Ling.AutoInject;
+            using Microsoft.Extensions.DependencyInjection;
+
+            namespace Test;
+
+            public interface IFoo { }
+
+            [AutoInject(ServiceLifetime.Singleton, typeof(IFoo), Strategy = ServiceRegistrationStrategy.{{strategy}})]
+            public sealed class MyService : IFoo;
+            """;
+
+#if !NET8_0_OR_GREATER
+        if (strategy == "Replace")
+        {
+            expectedRegistration = "services.TryAddSingleton<global::Test.IFoo, global::Test.MyService>();";
+        }
+#endif
+        await VerifyGeneratedCodeAsync(source, expectedRegistration, string.Empty, string.Empty);
     }
 
     [Theory]

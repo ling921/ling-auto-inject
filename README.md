@@ -5,12 +5,13 @@
 `Ling.AutoInject` provides attribute-driven dependency injection registrations plus a source generator that emits `IServiceCollection` extension methods for automatic registration.
 
 ## Features
-- Attribute-based registration: `SingletonService`, `ScopedService`, `TransientService`.
+- Attribute-based registration: `AutoInject`, `SingletonService`, `ScopedService`, `TransientService`.
 - Compile-time source generator that emits a single extension method to register discovered services.
 - Roslyn analyzers that validate attribute usage and `AutoInjectConfig` values at design time.
 - Optional keyed service support when the DI abstractions package supports it.
 - Configurable generated method, class and namespace via an assembly-level `AutoInjectConfig` attribute.
 - Service replacement support: use `Replace = true` to replace existing registrations instead of skipping when a service is already registered.
+- Explicit `Add`, `TryAdd`, `Replace`, and `TryAddEnumerable` strategies, plus declarative registration of all implemented interfaces.
 - Class-level customization via `AutoInjectExtensionsAttribute` for control over method generation behavior, including optional `IConfiguration` parameter support.
 
 ## Usage
@@ -34,13 +35,6 @@ The project will continue to evolve around three priorities: generator correctne
 - Extend discovery to support record class types and extension hosts declared in the global namespace.
 - Strengthen validation for duplicate registrations, conflicting lifetimes, service type mismatches, and configuration conflicts.
 - Add runtime integration tests in addition to generated-source snapshot tests.
-
-### Version 1.3 — Registration capabilities
-
-- Introduce an optional unified `AutoInject` attribute while preserving the existing lifetime-specific attributes.
-- Support registration of all implemented interfaces through declarative configuration.
-- Add explicit registration strategies, including `Add`, `TryAdd`, `Replace`, and `TryAddEnumerable`.
-- Improve keyed service support with stronger key validation and more consistent registration semantics.
 
 ### Version 1.4 — Configuration and modularization
 

@@ -71,6 +71,11 @@ internal static class DiagnosticDescriptors
     public const string UnnecessaryConfigUsageId = "LAI104";
 
     /// <summary>
+    /// Diagnostic ID for keyed registrations using the unsupported TryAddEnumerable strategy.
+    /// </summary>
+    public const string KeyedTryAddEnumerableId = "LAI105";
+
+    /// <summary>
     /// Diagnostic rule for detecting duplicate attributes on a class.
     /// <para>
     /// Message format: <c>Duplicate service registration for same lifetime '{0}' found.</c>
@@ -234,5 +239,16 @@ internal static class DiagnosticDescriptors
         messageFormat: L(nameof(SR.UnnecessaryConfigUsage_Message)),
         category: "Design",
         DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
+
+    /// <summary>
+    /// Diagnostic rule for the absence of a keyed equivalent to TryAddEnumerable.
+    /// </summary>
+    public static readonly DiagnosticDescriptor KeyedTryAddEnumerableRule = new(
+        id: KeyedTryAddEnumerableId,
+        title: "Unsupported keyed registration strategy",
+        messageFormat: "TryAddEnumerable cannot be used with a keyed service registration",
+        category: "Design",
+        DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 }

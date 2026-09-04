@@ -81,7 +81,11 @@ internal sealed class AutoInjectAttributeAnalyzer : DiagnosticAnalyzer
             var location = attr.ApplicationSyntaxReference?.GetSyntax(context.CancellationToken).GetLocation();
 
             // Conflicting lifetime check
-            var lifetime = symbols.GetLifetime(attr.AttributeClass)!;
+            var lifetime = symbols.GetLifetime(attr.AttributeClass) ?? GetUnifiedLifetime(attr);
+            if (lifetime is null)
+            {
+                continue;
+            }
             var conflictingLifetime = cache.Keys.FirstOrDefault(lt => lt != lifetime);
             if (conflictingLifetime is not null && lifetime != conflictingLifetime)
             {
@@ -93,7 +97,7 @@ internal sealed class AutoInjectAttributeAnalyzer : DiagnosticAnalyzer
                 context.ReportDiagnostic(diagnostic);
             }
 
-            var (serviceType, serviceKey) = GetAttributeArguments(attr);
+            var (serviceType, serviceKey) = GetAttributeArguments(attr, symbols);
 
             // Duplicate attribute check
             if (cache.TryGetValue(lifetime, out var attrList))
@@ -131,7 +135,7 @@ internal sealed class AutoInjectAttributeAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    private static (INamedTypeSymbol? ServiceType, string? ServiceKey) GetAttributeArguments(AttributeData attributeData)
+    private static (INamedTypeSymbol? ServiceType, string? ServiceKey) GetAttributeArguments(AttributeData attributeData, AutoInjectSymbols symbols)
     {
         INamedTypeSymbol? serviceType = null;
         string? serviceKey = null;
@@ -153,16 +157,35 @@ internal sealed class AutoInjectAttributeAnalyzer : DiagnosticAnalyzer
             }
         }
 
-        if (attributeData.ConstructorArguments.Length > 0)
+        var serviceTypeArgumentIndex = SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, symbols.AutoInjectAttributeSymbol)
+            ? 1
+            : 0;
+        if (attributeData.ConstructorArguments.Length > serviceTypeArgumentIndex)
         {
-            var firstArg = attributeData.ConstructorArguments[0];
-            if (!firstArg.IsNull && serviceType is null)
+            var serviceTypeArgument = attributeData.ConstructorArguments[serviceTypeArgumentIndex];
+            if (!serviceTypeArgument.IsNull && serviceType is null)
             {
-                serviceType = firstArg.Value as INamedTypeSymbol;
+                serviceType = serviceTypeArgument.Value as INamedTypeSymbol;
             }
         }
 
         return (serviceType, serviceKey);
+    }
+
+    private static string? GetUnifiedLifetime(AttributeData attributeData)
+    {
+        if (attributeData.ConstructorArguments.Length == 0)
+        {
+            return null;
+        }
+
+        return attributeData.ConstructorArguments[0].Value switch
+        {
+            0 => "Singleton",
+            1 => "Scoped",
+            2 => "Transient",
+            _ => null,
+        };
     }
 
     private static string? GetUnsupportedRegistrationKind(INamedTypeSymbol typeSymbol)

@@ -1,4 +1,4 @@
-﻿using Ling.AutoInject.SourceGenerators.Diagnostics;
+using Ling.AutoInject.SourceGenerators.Diagnostics;
 using Ling.AutoInject.SourceGenerators.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -33,6 +33,7 @@ internal sealed class NotSupportedFeatureAnalyzer : DiagnosticAnalyzer
         DiagnosticDescriptors.NotSupportedKeyedServiceRule,
         DiagnosticDescriptors.NotSupportedReplaceServiceRule,
         DiagnosticDescriptors.RequiredServiceTypeForReplaceRule,
+        DiagnosticDescriptors.KeyedTryAddEnumerableRule,
     ];
 
     /// <inheritdoc/>
@@ -48,6 +49,24 @@ internal sealed class NotSupportedFeatureAnalyzer : DiagnosticAnalyzer
         if (context.Node is not AttributeArgumentSyntax attributeArgument)
         {
             return;
+        }
+
+        if (attributeArgument.NameEquals?.Name.Identifier.Text is "Strategy"
+            && context.SemanticModel.GetConstantValue(attributeArgument.Expression, context.CancellationToken).Value is int strategy
+            && strategy == 3)
+        {
+            var attributeSyntax = attributeArgument.FirstAncestorOrSelf<AttributeSyntax>();
+            var attributeTypeSymbol = attributeSyntax is null
+                ? null
+                : context.SemanticModel.GetSymbolInfo(attributeSyntax, context.CancellationToken).Symbol?.ContainingType;
+            var symbols = new AutoInjectSymbols(context.SemanticModel.Compilation);
+            if (symbols.IsAutoInjectAttribute(attributeTypeSymbol)
+                && attributeSyntax!.ArgumentList?.Arguments.Any(a => a.NameEquals?.Name.Identifier.Text is "ServiceKey") == true)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                    DiagnosticDescriptors.KeyedTryAddEnumerableRule,
+                    attributeArgument.GetLocation()));
+            }
         }
 
         var version = context.SemanticModel.Compilation.FindReferenceAssemblyVersionByTypeMetadataName(Constants.ServiceCollectionServiceExtensionsFullName);

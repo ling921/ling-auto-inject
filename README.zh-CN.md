@@ -8,10 +8,11 @@
 
 ## 特性
 
-- 使用 `SingletonService`、`ScopedService` 和 `TransientService` 声明服务生命周期。
+- 使用统一的 `AutoInject`，或 `SingletonService`、`ScopedService` 和 `TransientService` 声明服务生命周期。
 - 编译期生成服务注册代码，不需要运行时扫描程序集。
 - 支持显式指定服务类型和 keyed service 注册。
 - 支持使用 `Replace = true` 替换已有服务注册。
+- 支持 `Add`、`TryAdd`、`Replace`、`TryAddEnumerable` 注册策略，以及声明式注册全部已实现接口。
 - 可通过程序集级 `AutoInjectConfig` 配置生成方法名、类名和命名空间。
 - 可通过 `AutoInjectExtensionsAttribute` 自定义生成类，并选择是否注入 `IConfiguration`。
 - 内置 Roslyn 分析器，可在 IDE 中检查属性使用和配置错误。
@@ -71,6 +72,22 @@ services.AddCustomServices();
 ```
 
 ## 高级用法
+
+### 统一属性、接口注册与策略
+
+`AutoInject` 可以在一个属性中指定生命周期、服务类型和注册策略；原有生命周期属性仍完全兼容：
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+
+[AutoInject(ServiceLifetime.Scoped, RegisterImplementedInterfaces = true)]
+public class FooService : IFoo, IBar { }
+
+[AutoInject(ServiceLifetime.Singleton, typeof(ICache), Strategy = ServiceRegistrationStrategy.Replace)]
+public class MemoryCache : ICache { }
+```
+
+`RegisterImplementedInterfaces = true` 会为实现的每个接口生成注册。键控服务不支持 `TryAddEnumerable`；分析器会报告该组合。
 
 ### 替换已有注册
 

@@ -1,5 +1,13 @@
-﻿; Shipped analyzer releases
+; Shipped analyzer releases
 ; https://github.com/dotnet/roslyn-analyzers/blob/main/src/Microsoft.CodeAnalysis.Analyzers/ReleaseTrackingAnalyzers.Help.md
+
+## Release 1.3.0
+
+### New Rules
+
+Rule ID | Category | Severity | Notes
+--------|----------|----------|--------------------
+LAI105  | Design | Error | `TryAddEnumerable` cannot be used with a keyed registration.
 
 
 ## Release 1.2.0

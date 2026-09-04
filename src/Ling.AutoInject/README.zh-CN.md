@@ -6,10 +6,11 @@
 
 ## 特性
 
-- 使用 `SingletonService`、`ScopedService` 和 `TransientService` 声明服务。
+- 使用统一的 `AutoInject`，或 `SingletonService`、`ScopedService` 和 `TransientService` 声明服务。
 - 支持显式服务类型和 keyed service 注册。
 - 支持通过程序集级 `AutoInjectConfig` 配置生成的方法名、宿主类名和命名空间。
 - 支持设置 `Replace = true` 替换已有服务注册。
+- 支持 `Add`、`TryAdd`、`Replace`、`TryAddEnumerable` 注册策略，以及声明式注册全部已实现接口。
 - 支持通过 `AutoInjectExtensionsAttribute` 自定义生成类，并选择是否包含 `IConfiguration` 参数。
 - 提供 Roslyn 分析器，帮助发现常见错误和无效配置。
 
@@ -69,6 +70,20 @@ public class MyService : IFoo { }
 ```
 
 这会生成 `services.Replace(ServiceDescriptor.Singleton<IFoo, MyService>())`，而不是 `TryAddSingleton`。
+
+## 统一属性、接口注册与策略
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+
+[AutoInject(ServiceLifetime.Scoped, RegisterImplementedInterfaces = true)]
+public class FooService : IFoo, IBar { }
+
+[AutoInject(ServiceLifetime.Singleton, typeof(ICache), Strategy = ServiceRegistrationStrategy.Replace)]
+public class MemoryCache : ICache { }
+```
+
+`AutoInject` 在一个属性中指定生命周期、服务类型和策略；既有生命周期属性仍兼容。`RegisterImplementedInterfaces = true` 会注册全部已实现接口。键控服务不能使用 `TryAddEnumerable`，分析器会报告该无效组合。
 
 ## 使用 AutoInjectExtensionsAttribute
 
