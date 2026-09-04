@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+  test-matrix:
     name: test (${{ matrix.framework }})
     runs-on: ubuntu-latest
     permissions:
@@ -58,3 +58,12 @@ jobs:
           name: Ling.AutoInject-nupkg
           path: artifacts/packages/*.nupkg
           if-no-files-found: error
+
+  test:
+    name: test
+    needs: test-matrix
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify test matrix
+        run: test "${{ needs.test-matrix.result }}" = "success"
