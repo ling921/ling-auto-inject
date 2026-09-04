@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Microsoft.CodeAnalysis.Text;
@@ -30,7 +30,7 @@ internal static partial class CSharpSourceGeneratorVerifier<TSourceGenerator>
 
         foreach (var (fileName, generatedCode) in generatedSources)
         {
-            var sourceText = NewLineRegex().Replace(generatedCode, Environment.NewLine);
+            var sourceText = NewLineRegex().Replace(generatedCode, "\r\n");
 
             test.TestState.GeneratedSources.Add((typeof(TSourceGenerator), fileName, SourceText.From(sourceText, Encoding.UTF8)));
         }
@@ -49,7 +49,7 @@ internal static partial class CSharpSourceGeneratorVerifier<TSourceGenerator>
                 .AddPackages([new PackageIdentity("Microsoft.Extensions.DependencyInjection.Abstractions", "9.0.11")]);
 #elif NET8_0
             TestState.ReferenceAssemblies = ReferenceAssemblies.Net.Net80
-                .AddPackages([new PackageIdentity("Microsoft.Extensions.DependencyInjection.Abstractions", "8.0.2")]);
+                .AddPackages([new PackageIdentity("Microsoft.Extensions.DependencyInjection.Abstractions", "8.0.0")]);
 #elif NET7_0
             TestState.ReferenceAssemblies = ReferenceAssemblies.Net.Net70
                 .AddPackages([new PackageIdentity("Microsoft.Extensions.DependencyInjection.Abstractions", "7.0.0")]);

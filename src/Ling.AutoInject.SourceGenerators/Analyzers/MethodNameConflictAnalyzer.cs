@@ -26,25 +26,13 @@ internal sealed class MethodNameConflictAnalyzer : DiagnosticAnalyzer
         context.RegisterCompilationStartAction(compStart =>
         {
             var compilation = compStart.Compilation;
-            var attrData = compilation.Assembly.GetAttributes()
-                .FirstOrDefault(a => a.AttributeClass?.ToDisplayString() == Constants.AutoInjectConfigAttributeFullName);
+            var symbols = new AutoInjectSymbols(compilation);
+            var attrData = FindExtensionsAttribute(compilation.Assembly.GlobalNamespace, symbols.AutoInjectExtensionsAttributeSymbol)
+                ?? compilation.Assembly.GetAttributes()
+                    .FirstOrDefault(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, symbols.AutoInjectConfigAttributeSymbol));
 
-            if (attrData is null)
-                return;
-
-            string? methodName = null;
-
-            // Prefer named argument MethodName
-            foreach (var named in attrData.NamedArguments)
-            {
-                if (named.Key == "MethodName" && !named.Value.IsNull)
-                {
-                    methodName = named.Value.ToCSharpString().Trim('"');
-                    break;
-                }
-            }
-
-            if (string.IsNullOrEmpty(methodName))
+            var methodName = GetConfiguredMethodName(attrData);
+            if (string.IsNullOrEmpty(methodName) || attrData is null)
                 return;
 
             // Resolve IServiceCollection type symbol to compare parameter types
@@ -108,5 +96,47 @@ internal sealed class MethodNameConflictAnalyzer : DiagnosticAnalyzer
 
             }, SymbolKind.Method);
         });
+    }
+
+    private static AttributeData? FindExtensionsAttribute(INamespaceSymbol namespaceSymbol, INamedTypeSymbol attributeSymbol)
+    {
+        foreach (var type in namespaceSymbol.GetTypeMembers())
+        {
+            var attribute = type.GetAttributes()
+                .FirstOrDefault(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, attributeSymbol));
+            if (attribute is not null)
+            {
+                return attribute;
+            }
+        }
+
+        foreach (var childNamespace in namespaceSymbol.GetNamespaceMembers())
+        {
+            var attribute = FindExtensionsAttribute(childNamespace, attributeSymbol);
+            if (attribute is not null)
+            {
+                return attribute;
+            }
+        }
+
+        return null;
+    }
+
+    private static string? GetConfiguredMethodName(AttributeData? attributeData)
+    {
+        if (attributeData is null)
+        {
+            return null;
+        }
+
+        foreach (var named in attributeData.NamedArguments)
+        {
+            if (named.Key == "MethodName" && !named.Value.IsNull)
+            {
+                return named.Value.ToCSharpString().Trim('"');
+            }
+        }
+
+        return null;
     }
 }

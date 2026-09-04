@@ -1,4 +1,4 @@
-﻿using Ling.AutoInject.SourceGenerators.Analyzers;
+using Ling.AutoInject.SourceGenerators.Analyzers;
 using Ling.AutoInject.SourceGenerators.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
 using VerifyCS = Ling.AutoInject.SourceGenerators.Tests.Verifiers.CSharpAnalyzerVerifier<
@@ -11,6 +11,32 @@ namespace Ling.AutoInject.SourceGenerators.Tests.Analyzers;
 /// </summary>
 public sealed class MethodNameConflictAnalyzerTests
 {
+    [Fact]
+    public async Task Conflict_WhenAutoInjectExtensionsConfiguresMethodName_ReportsDiagnostic()
+    {
+        const string source = """
+            using Ling.AutoInject;
+            using Microsoft.Extensions.DependencyInjection;
+
+            namespace Test
+            {
+                [AutoInjectExtensions(MethodName = "AddMyServices")]
+                public static partial class MyExtensions
+                {
+                    public static void AddMyServices(this IServiceCollection services)
+                    {
+                    }
+                }
+            }
+            """;
+
+        var diagnostic = new DiagnosticResult(DiagnosticDescriptors.ConflictingExtensionRule)
+            .WithLocation(6, 27)
+            .WithArguments("AddMyServices");
+
+        await VerifyCS.VerifyAnalyzerAsync(source, diagnostic);
+    }
+
     [Fact]
     public async Task NoConflict_WhenMethodNamesDiffer_NoDiagnostic()
     {

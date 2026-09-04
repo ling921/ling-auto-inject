@@ -1,4 +1,4 @@
-﻿using Ling.AutoInject.SourceGenerators.Resources;
+using Ling.AutoInject.SourceGenerators.Resources;
 using Microsoft.CodeAnalysis;
 
 namespace Ling.AutoInject.SourceGenerators.Diagnostics;
@@ -44,6 +44,11 @@ internal static class DiagnosticDescriptors
     /// Diagnostic ID for rule <see cref="RequiredStaticPartialClassRule"/>.
     /// </summary>
     public const string RequiredStaticPartialClassId = "LAI007";
+
+    /// <summary>
+    /// Diagnostic ID for a registration target that cannot be constructed by the built-in DI container.
+    /// </summary>
+    public const string UnsupportedRegistrationTargetId = "LAI008";
 
     /// <summary>
     /// Diagnostic ID for rule <see cref="NotSupportedKeyedServiceRule"/>.
@@ -160,6 +165,17 @@ internal static class DiagnosticDescriptors
         id: RequiredStaticPartialClassId,
         title: L(nameof(SR.RequiredStaticPartialClass_Title)),
         messageFormat: L(nameof(SR.RequiredStaticPartialClass_Message)),
+        category: "Design",
+        DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    /// <summary>
+    /// Diagnostic rule for types that cannot be registered by the generated generic DI APIs.
+    /// </summary>
+    public static readonly DiagnosticDescriptor UnsupportedRegistrationTargetRule = new(
+        id: UnsupportedRegistrationTargetId,
+        title: "Unsupported service registration target",
+        messageFormat: "The {0} type '{1}' cannot be registered by AutoInject",
         category: "Design",
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);

@@ -1,5 +1,5 @@
-name: Setup Environment
-description: Sets up the environment for the workflow
+name: Setup .NET
+description: Installs the SDKs required to build and test Ling.AutoInject.
 
 env:
   # Necessary for installing OpenSSL 1.1

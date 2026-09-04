@@ -1,25 +1,69 @@
-name: Run Tests
+name: Build and test
 
 on:
+  workflow_dispatch:
+  push:
+    branches: [master, develop]
   pull_request:
-    branches:
-      - master
+    branches: [master, develop]
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  test:
+  test-matrix:
+    name: test (${{ matrix.framework }})
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        framework:
+          - netcoreapp3.1
+          - net5.0
+          - net6.0
+          - net7.0
+          - net8.0
+          - net9.0
+          - net10.0
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - uses: ./.github/actions/setup-env
 
-      - name: Restore dependencies
-        run: dotnet restore
+      - name: Restore
+        run: dotnet restore Ling.AutoInject.slnx
 
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build Ling.AutoInject.slnx --configuration Release --no-restore
 
-      - name: Run tests
-        run: dotnet test --configuration Release --no-build --verbosity normal
+      - name: Test
+        run: dotnet test tests/Ling.AutoInject.SourceGenerators.Tests/Ling.AutoInject.SourceGenerators.Tests.csproj --framework ${{ matrix.framework }} --configuration Release --no-build --verbosity normal
+
+      - name: Run sample
+        if: matrix.framework == 'net10.0'
+        run: dotnet run --project samples/Ling.AutoInject.Sample/Ling.AutoInject.Sample.csproj --configuration Release --no-build
+
+      - name: Pack
+        if: matrix.framework == 'net10.0'
+        run: dotnet pack src/Ling.AutoInject/Ling.AutoInject.csproj --configuration Release --no-build --output artifacts/packages
+
+      - name: Upload package artifact
+        if: matrix.framework == 'net10.0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ling.AutoInject-nupkg
+          path: artifacts/packages/*.nupkg
+          if-no-files-found: error
+
+  test:
+    name: test
+    needs: test-matrix
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify test matrix
+        run: test "${{ needs.test-matrix.result }}" = "success"
