@@ -9,7 +9,6 @@
 
   <PropertyGroup>
     <VersionPrefix>1.2.0</VersionPrefix>
-    <VersionSuffix>preview.1</VersionSuffix>
   </PropertyGroup>
 
   <ItemGroup>
