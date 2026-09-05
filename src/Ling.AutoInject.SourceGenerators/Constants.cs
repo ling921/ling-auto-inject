@@ -1,4 +1,4 @@
-﻿namespace Ling.AutoInject.SourceGenerators;
+namespace Ling.AutoInject.SourceGenerators;
 
 internal static class Constants
 {
@@ -10,6 +10,7 @@ internal static class Constants
 
     public const string AutoInjectConfigAttributeFullName = "Ling.AutoInject.AutoInjectConfigAttribute";
     public const string AutoInjectExtensionsAttributeFullName = "Ling.AutoInject.AutoInjectExtensionsAttribute";
+    public const string AutoInjectAttributeFullName = "Ling.AutoInject.AutoInjectAttribute";
 
     public const string TransientServiceAttributeFullName = "Ling.AutoInject.TransientServiceAttribute";
     public const string ScopedServiceAttributeFullName = "Ling.AutoInject.ScopedServiceAttribute";

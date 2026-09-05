@@ -1,4 +1,4 @@
-﻿using Ling.AutoInject.SourceGenerators.Diagnostics;
+using Ling.AutoInject.SourceGenerators.Diagnostics;
 using Ling.AutoInject.SourceGenerators.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -60,8 +60,7 @@ internal sealed class NotSupportedFeatureAnalyzer : DiagnosticAnalyzer
             }
 
             var expression = attributeArgument.Expression;
-            if (expression is not LiteralExpressionSyntax literalExpression ||
-                literalExpression.IsKind(SyntaxKind.FalseLiteralExpression))
+            if (context.SemanticModel.GetConstantValue(expression).Value is not true)
             {
                 return;
             }
@@ -80,7 +79,10 @@ internal sealed class NotSupportedFeatureAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
-            if (!HasServiceType(attributeSyntax))
+            if (!HasServiceType(attributeSyntax)
+                && !attributeSyntax.ArgumentList!.Arguments.Any(a =>
+                    a.NameEquals?.Name.Identifier.Text == "RegisterImplementedInterfaces"
+                    && context.SemanticModel.GetConstantValue(a.Expression).Value is true))
             {
                 var diagnostic = Diagnostic.Create(
                     DiagnosticDescriptors.RequiredServiceTypeForReplaceRule,
@@ -105,6 +107,13 @@ internal sealed class NotSupportedFeatureAnalyzer : DiagnosticAnalyzer
             var attributeTypeSymbol = attributeSymbol?.ContainingType;
             var symbols = new AutoInjectSymbols(context.SemanticModel.Compilation);
             if (!symbols.IsAutoInjectAttribute(attributeTypeSymbol))
+            {
+                return;
+            }
+
+            if (attributeArgument.NameEquals?.Name.Identifier.Text is "ServiceKey"
+                && context.SemanticModel.GetConstantValue(attributeArgument.Expression).HasValue
+                && context.SemanticModel.GetConstantValue(attributeArgument.Expression).Value is null)
             {
                 return;
             }

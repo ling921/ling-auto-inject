@@ -1,4 +1,4 @@
-﻿using Ling.AutoInject.SourceGenerators.Analyzers;
+using Ling.AutoInject.SourceGenerators.Analyzers;
 using Ling.AutoInject.SourceGenerators.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
 using VerifyCS = Ling.AutoInject.SourceGenerators.Tests.Verifiers.CSharpAnalyzerVerifier<
@@ -89,6 +89,23 @@ public sealed class NotSupportedFeatureAnalyzerTests
     }
 
 #if NET8_0_OR_GREATER
+
+    [Fact]
+    public async Task KeyedTryAddEnumerable_IsSupported()
+    {
+        const string source = """
+            using Ling.AutoInject;
+            using Microsoft.Extensions.DependencyInjection;
+
+            namespace Test
+            {
+                [AutoInject(ServiceLifetime.Singleton, ServiceKey = "k1", Strategy = ServiceRegistrationStrategy.TryAddEnumerable)]
+                public class MyService { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source);
+    }
 
     [Theory]
     [InlineData("Singleton")]

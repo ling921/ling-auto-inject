@@ -11,6 +11,49 @@ namespace Ling.AutoInject.SourceGenerators.Tests.Analyzers;
 /// </summary>
 public sealed class AutoInjectAttributeAnalyzerTests
 {
+    [Theory]
+    [InlineData("(ServiceLifetime)99", "", "Lifetime must be Singleton, Scoped, or Transient")]
+    [InlineData("ServiceLifetime.Singleton", ", Strategy = (ServiceRegistrationStrategy)99", "Strategy must be Add, TryAdd, Replace, or TryAddEnumerable")]
+    [InlineData("ServiceLifetime.Singleton", ", ServiceKey = new int[] { 1 }", "ServiceKey cannot be an array because array keys use reference equality")]
+    [InlineData("ServiceLifetime.Singleton", ", RegisterImplementedInterfaces = true", "RegisterImplementedInterfaces requires at least one implemented interface")]
+    public async Task InvalidUnifiedOptions_ReportDiagnostic(string lifetime, string arguments, string reason)
+    {
+        var source = $$"""
+            using Ling.AutoInject;
+            using Microsoft.Extensions.DependencyInjection;
+            [{|#0:AutoInject({{lifetime}}{{arguments}})|}]
+            public class Service { }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(source,
+            new DiagnosticResult(DiagnosticDescriptors.InvalidRegistrationOptionsRule).WithLocation(0).WithArguments(reason));
+    }
+
+    [Fact]
+    public async Task UnifiedInterfacesAndSelf_AreNotDuplicates()
+    {
+        await VerifyCS.VerifyAnalyzerAsync("""
+            using Ling.AutoInject;
+            using Microsoft.Extensions.DependencyInjection;
+            public interface IFoo { }
+            [AutoInject(ServiceLifetime.Scoped)]
+            [AutoInject(ServiceLifetime.Scoped, RegisterImplementedInterfaces = true)]
+            public class Service : IFoo { }
+            """);
+    }
+
+    [Fact]
+    public async Task ExpandedInterfaceOverlaps_AreDiagnosed()
+    {
+        await VerifyCS.VerifyAnalyzerAsync("""
+            using Ling.AutoInject;
+            using Microsoft.Extensions.DependencyInjection;
+            public interface IFoo { }
+            [AutoInject(ServiceLifetime.Scoped, RegisterImplementedInterfaces = true)]
+            [{|#0:ScopedService(typeof(IFoo))|}]
+            public class Service : IFoo { }
+            """, new DiagnosticResult(DiagnosticDescriptors.DuplicateAttributeRule).WithLocation(0).WithArguments("Scoped"));
+    }
+
     #region Duplicate Attributes
 
     [Theory]

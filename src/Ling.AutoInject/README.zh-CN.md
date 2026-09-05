@@ -6,10 +6,11 @@
 
 ## 特性
 
-- 使用 `SingletonService`、`ScopedService` 和 `TransientService` 声明服务。
+- 使用统一的 `AutoInject`，或 `SingletonService`、`ScopedService` 和 `TransientService` 声明服务。
 - 支持显式服务类型和 keyed service 注册。
 - 支持通过程序集级 `AutoInjectConfig` 配置生成的方法名、宿主类名和命名空间。
 - 支持设置 `Replace = true` 替换已有服务注册。
+- 支持 `Add`、`TryAdd`、`Replace`、`TryAddEnumerable` 注册策略，以及声明式注册全部已实现接口。
 - 支持通过 `AutoInjectExtensionsAttribute` 自定义生成类，并选择是否包含 `IConfiguration` 参数。
 - 提供 Roslyn 分析器，帮助发现常见错误和无效配置。
 
@@ -69,6 +70,33 @@ public class MyService : IFoo { }
 ```
 
 这会生成 `services.Replace(ServiceDescriptor.Singleton<IFoo, MyService>())`，而不是 `TryAddSingleton`。
+
+## 统一属性、接口注册与策略
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+
+[AutoInject(ServiceLifetime.Scoped, RegisterImplementedInterfaces = true)]
+public class FooService : IFoo, IBar { }
+
+[AutoInject(ServiceLifetime.Singleton, typeof(ICache), Strategy = ServiceRegistrationStrategy.Replace)]
+public class MemoryCache : ICache { }
+```
+
+`AutoInject` 在一个属性中指定生命周期、服务类型和策略；既有生命周期属性仍可使用。`RegisterImplementedInterfaces = true` 注册全部已实现接口（包括继承的接口），不会注册类自身。各接口直接映射到实现类型并具有独立的生命周期缓存，避免接口被覆盖后转发到错误对象。如果需要在默认策略下共享 Scoped/Singleton 实例，可额外添加一条自身注册属性。
+
+统一属性和生命周期属性的 `Strategy` 默认均为 `TryAdd`：
+
+| 策略 | 行为 |
+| --- | --- |
+| `Add` | 每次调用生成方法都追加注册。 |
+| `TryAdd` | 已存在相同服务类型和键时保留原注册。 |
+| `Replace` | 删除第一条相同服务类型和键的注册，再追加新注册。 |
+| `TryAddEnumerable` | 按服务类型、键和实现类型去重；自身注册使用等价的 `TryAdd` 行为。即使存在自身注册，各接口也保留独立实例。 |
+
+DI Abstractions 8.0+ 的键控服务支持全部四种策略。null 键表示普通注册；数组键因采用引用相等比较而被拒绝。旧版 DI 会忽略非空键并报告 `LAI101`。新增的 `Strategy = Replace` 在全部受支持 DI 版本上均支持普通注册；旧属性 `Replace = true` 优先于 `Strategy`，保持原有的 pre-8 警告和降级行为。
+
+无效枚举值和空接口集合会报告 `LAI009`。`AutoInject` 的命名参数 `ServiceType` 覆盖构造函数中的服务类型。与 1.2 相比，仅注册接口时不再通过第一个接口隐式共享实例；现有属性及生成的入口方法保持可用。
 
 ## 使用 AutoInjectExtensionsAttribute
 

@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 
 namespace Ling.AutoInject.SourceGenerators;
 
@@ -6,6 +6,7 @@ internal sealed class AutoInjectSymbols(Compilation compilation)
 {
     public INamedTypeSymbol AutoInjectConfigAttributeSymbol { get; } = compilation.GetTypeByMetadataName(Constants.AutoInjectConfigAttributeFullName)!;
     public INamedTypeSymbol AutoInjectExtensionsAttributeSymbol { get; } = compilation.GetTypeByMetadataName(Constants.AutoInjectExtensionsAttributeFullName)!;
+    public INamedTypeSymbol AutoInjectAttributeSymbol { get; } = compilation.GetTypeByMetadataName(Constants.AutoInjectAttributeFullName)!;
 
     public INamedTypeSymbol SingletonServiceAttributeSymbol { get; } = compilation.GetTypeByMetadataName(Constants.SingletonServiceAttributeFullName)!;
     public INamedTypeSymbol ScopedServiceAttributeSymbol { get; } = compilation.GetTypeByMetadataName(Constants.ScopedServiceAttributeFullName)!;
@@ -16,7 +17,8 @@ internal sealed class AutoInjectSymbols(Compilation compilation)
         return symbol is not null
             && (SymbolEqualityComparer.Default.Equals(symbol, SingletonServiceAttributeSymbol)
             || SymbolEqualityComparer.Default.Equals(symbol, ScopedServiceAttributeSymbol)
-            || SymbolEqualityComparer.Default.Equals(symbol, TransientServiceAttributeSymbol));
+            || SymbolEqualityComparer.Default.Equals(symbol, TransientServiceAttributeSymbol)
+            || SymbolEqualityComparer.Default.Equals(symbol, AutoInjectAttributeSymbol));
     }
 
     public string? GetLifetime(INamedTypeSymbol? symbol)

@@ -1,5 +1,13 @@
-﻿; Shipped analyzer releases
+; Shipped analyzer releases
 ; https://github.com/dotnet/roslyn-analyzers/blob/main/src/Microsoft.CodeAnalysis.Analyzers/ReleaseTrackingAnalyzers.Help.md
+
+## Release 1.3.0
+
+### New Rules
+
+Rule ID | Category | Severity | Notes
+--------|----------|----------|--------------------
+LAI009  | Design | Error | Invalid lifetime, strategy, service key, or empty implemented-interface registration.
 
 
 ## Release 1.2.0

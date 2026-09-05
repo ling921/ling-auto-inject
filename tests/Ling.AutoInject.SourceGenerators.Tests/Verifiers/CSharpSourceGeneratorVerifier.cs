@@ -63,11 +63,13 @@ internal static partial class CSharpSourceGeneratorVerifier<TSourceGenerator>
             TestState.ReferenceAssemblies = ReferenceAssemblies.NetCore.NetCoreApp31
                 .AddPackages([new PackageIdentity("Microsoft.Extensions.DependencyInjection.Abstractions", "3.1.32")]);
 #endif
+            TestState.ReferenceAssemblies = TestState.ReferenceAssemblies.AddPackages(
+                [new PackageIdentity("Microsoft.Extensions.Configuration.Abstractions", "3.1.32")]);
         }
 
         protected override ImmutableArray<(Project project, Diagnostic diagnostic)> FilterDiagnostics(ImmutableArray<(Project project, Diagnostic diagnostic)> diagnostics)
         {
-            return diagnostics.Where(d => d.diagnostic.Id.StartsWith("LAI")).ToImmutableArray();
+            return diagnostics.Where(d => d.diagnostic.Severity == DiagnosticSeverity.Error || d.diagnostic.Id.StartsWith("LAI")).ToImmutableArray();
         }
     }
 }

@@ -71,6 +71,11 @@ internal static class DiagnosticDescriptors
     public const string UnnecessaryConfigUsageId = "LAI104";
 
     /// <summary>
+    /// Diagnostic ID for invalid registration options.
+    /// </summary>
+    public const string InvalidRegistrationOptionsId = "LAI009";
+
+    /// <summary>
     /// Diagnostic rule for detecting duplicate attributes on a class.
     /// <para>
     /// Message format: <c>Duplicate service registration for same lifetime '{0}' found.</c>
@@ -234,5 +239,16 @@ internal static class DiagnosticDescriptors
         messageFormat: L(nameof(SR.UnnecessaryConfigUsage_Message)),
         category: "Design",
         DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
+
+    /// <summary>
+    /// Diagnostic rule for invalid registration options.
+    /// </summary>
+    public static readonly DiagnosticDescriptor InvalidRegistrationOptionsRule = new(
+        id: InvalidRegistrationOptionsId,
+        title: "Invalid registration options",
+        messageFormat: "Invalid AutoInject registration: {0}",
+        category: "Design",
+        DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 }
