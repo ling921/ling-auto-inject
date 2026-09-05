@@ -91,7 +91,7 @@ public sealed class NotSupportedFeatureAnalyzerTests
 #if NET8_0_OR_GREATER
 
     [Fact]
-    public async Task KeyedTryAddEnumerable_ReportsDiagnostic()
+    public async Task KeyedTryAddEnumerable_IsSupported()
     {
         const string source = """
             using Ling.AutoInject;
@@ -99,14 +99,12 @@ public sealed class NotSupportedFeatureAnalyzerTests
 
             namespace Test
             {
-                [AutoInject(ServiceLifetime.Singleton, ServiceKey = "k1", {|#0:Strategy = ServiceRegistrationStrategy.TryAddEnumerable|})]
+                [AutoInject(ServiceLifetime.Singleton, ServiceKey = "k1", Strategy = ServiceRegistrationStrategy.TryAddEnumerable)]
                 public class MyService { }
             }
             """;
 
-        var diagnostic = new DiagnosticResult(DiagnosticDescriptors.KeyedTryAddEnumerableRule)
-            .WithLocation(0);
-        await VerifyCS.VerifyAnalyzerAsync(source, diagnostic);
+        await VerifyCS.VerifyAnalyzerAsync(source);
     }
 
     [Theory]

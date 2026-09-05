@@ -18,6 +18,8 @@
 
 For detailed usage instructions, including installation, attribute-based registration, and more, see the [package README](src/Ling.AutoInject/README.md).
 
+Version 1.3 adds `[AutoInject(ServiceLifetime.Scoped, RegisterImplementedInterfaces = true)]`. Interfaces are registered directly with independent lifetime caches; all four strategies support keyed services on DI 8.0+. See the package README for instance-sharing and compatibility details.
+
 ## Development
 - Build: `dotnet build`
 - Test: `dotnet test`

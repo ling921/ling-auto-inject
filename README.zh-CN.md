@@ -87,7 +87,7 @@ public class FooService : IFoo, IBar { }
 public class MemoryCache : ICache { }
 ```
 
-`RegisterImplementedInterfaces = true` 会为实现的每个接口生成注册。键控服务不支持 `TryAddEnumerable`；分析器会报告该组合。
+`RegisterImplementedInterfaces = true` 为全部已实现接口生成独立的实现类型注册，不包含类自身。DI Abstractions 8.0+ 的键控服务支持全部四种策略，包括 `TryAddEnumerable`。默认策略为 `TryAdd`；详细去重、替换、共享实例和兼容规则见[中文包文档](src/Ling.AutoInject/README.zh-CN.md)。
 
 ### 替换已有注册
 

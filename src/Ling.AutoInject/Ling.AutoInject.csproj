@@ -12,7 +12,7 @@
   <PropertyGroup>
     <PackageId>Ling.AutoInject</PackageId>
     <Authors>ling921</Authors>
-    <Description>A compile-time, attribute-driven DI helper: generate IServiceCollection extension methods from SingletonService / ScopedService / TransientService attributes.</Description>
+    <Description>Compile-time dependency injection with AutoInject and lifetime attributes, implemented-interface registration, keyed services, and explicit registration strategies.</Description>
     <PackageTags>ling;dependency-injection;sourcegenerator;analyzers;</PackageTags>
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -34,13 +34,19 @@
   </ItemGroup>
 
   <!-- Package source generator into analyzers directory -->
+  <ItemGroup>
+    <ProjectReference Include="..\Ling.AutoInject.SourceGenerators\Ling.AutoInject.SourceGenerators.csproj"
+                      ReferenceOutputAssembly="false" PrivateAssets="all" />
+  </ItemGroup>
+
   <Target Name="_AddAnalyzer" BeforeTargets="GetTargetPath" Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PropertyGroup>
       <GeneratorOutDir>$(ProjectDir)..\Ling.AutoInject.SourceGenerators\bin\$(Configuration)\netstandard2.0\</GeneratorOutDir>
       <GeneratorDll>$(GeneratorOutDir)Ling.AutoInject.SourceGenerators.dll</GeneratorDll>
     </PropertyGroup>
 
-    <ItemGroup Condition="Exists('$(GeneratorDll)')">
+    <Error Condition="!Exists('$(GeneratorDll)')" Text="Build the source generator before packing Ling.AutoInject." />
+    <ItemGroup>
       <TfmSpecificPackageFile Include="$(GeneratorDll)"
                               PackagePath="analyzers/dotnet/cs" />
       <TfmSpecificPackageFile Include="$(GeneratorOutDir)**\*.resources.dll"

@@ -69,12 +69,17 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
 
         var targetVerison = compilation.FindReferenceAssemblyVersionByTypeMetadataName(Constants.ServiceCollectionServiceExtensionsFullName);
         var supportKeyedService = targetVerison >= Constants.SupportKeyedServiceVersion;
+        if (supportKeyedService)
+        {
+            context.AddSourceWithCrlf("AutoInjectKeyedRegistration.g.cs", SourceCodes.KeyedRegistration);
+        }
 
-        // collect registrations
+        var visited = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
+        // Partial declarations must only contribute their attributes once.
         foreach (var cwa in classes)
         {
             var classSymbol = cwa.ClassSymbol;
-            if (!IsSupportedRegistrationType(classSymbol))
+            if (!visited.Add(classSymbol) || !IsSupportedRegistrationType(classSymbol))
             {
                 continue;
             }
@@ -92,11 +97,11 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
                     : symbols.GetLifetime(ad.AttributeClass);
                 if (lifetime is null)
                 {
-                    return;
+                    continue;
                 }
 
                 var serviceTypedConstant = ad.GetConstructorArgument(isUnifiedAttribute ? 1 : 0);
-                if (serviceTypedConstant.IsNull)
+                if (ad.NamedArguments.Any(a => a.Key == "ServiceType"))
                 {
                     serviceTypedConstant = ad.GetNamedArgument("ServiceType");
                 }
@@ -113,13 +118,12 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
                     && registerImplementedInterfacesTypedConstant.Value is bool rii
                     && rii;
 
-                // Keyed services and replace are only supported in 'Microsoft.Extensions.DependencyInjection.Abstractions' v8.0.0+
-                // If not supported, ignore serviceKey and replace
+                // Retain the legacy Replace property's pre-8 fallback. The new Strategy
+                // uses unkeyed Replace on every supported DI version.
                 if (!supportKeyedService)
                 {
                     serviceKey = null;
-                    replace = false;
-                    if (strategy == "Replace")
+                    if (replace)
                     {
                         strategy = "TryAdd";
                     }
@@ -151,7 +155,7 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
 
             registrations.AddRange(regList
                 .OrderBy(r => r.ServiceType is null ? 0 : 1)
-                .ThenBy(r => r.Strategy));
+                .ThenBy(r => r.Strategy == "Replace" ? 1 : 0));
         }
 
         var assemblyName = compilation.AssemblyName ?? "Generated";
@@ -299,7 +303,7 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
             cb.AppendFormatLine("public static IServiceCollection {0}(this IServiceCollection services)", methodName);
         }
         cb.OpenBrace();
-        cb.AppendLine("if (services == null) throw new ArgumentNullException(nameof(services));");
+        cb.AppendLine("if (services == null) throw new global::System.ArgumentNullException(nameof(services));");
         cb.AppendLine();
         cb.AppendLine("AddSingletonServices(services);");
         cb.AppendLine("AddScopedServices(services);");
@@ -321,59 +325,54 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         {
             var key = registration.ServiceKey;
             var strategy = registration.Strategy;
-            var isFactory = providedService is not null;
-
-            if (key is null)
+            if (key is not null)
             {
-                if (isFactory)
+                var types = $"{serviceType}, {implementationType}";
+                var arguments = key;
+                if (providedService is not null && strategy != "TryAddEnumerable")
                 {
-                    var factory = $"sp => ({serviceType})sp.GetRequiredService<{providedService}>()";
-                    switch (strategy)
-                    {
-                        case "Add": cb.AppendFormatLine("services.Add{0}<{1}>({2});", lifetime, serviceType, factory); break;
-                        case "Replace": cb.AppendFormatLine("services.Replace(ServiceDescriptor.{0}<{1}>({2}));", lifetime, serviceType, factory); break;
-                        case "TryAddEnumerable": cb.AppendFormatLine("services.TryAddEnumerable(ServiceDescriptor.{0}<{1}>({2}));", lifetime, serviceType, factory); break;
-                        default: cb.AppendFormatLine("services.TryAdd{0}<{1}>({2});", lifetime, serviceType, factory); break;
-                    }
-                    return;
+                    types = serviceType;
+                    arguments += $", (sp, key) => ({serviceType})sp.GetRequiredKeyedService<{providedService}>(key)";
                 }
-
-                var genericTypes = selfRegistration ? implementationType : $"{serviceType}, {implementationType}";
-                switch (strategy)
+                var strategyValue = strategy switch
                 {
-                    case "Add": cb.AppendFormatLine("services.Add{0}<{1}>();", lifetime, genericTypes); break;
-                    case "Replace": cb.AppendFormatLine("services.Replace(ServiceDescriptor.{0}<{1}>());", lifetime, genericTypes); break;
-                    case "TryAddEnumerable": cb.AppendFormatLine("services.TryAddEnumerable(ServiceDescriptor.{0}<{1}>());", lifetime, genericTypes); break;
-                    default: cb.AppendFormatLine("services.TryAdd{0}<{1}>();", lifetime, genericTypes); break;
-                }
+                    "Add" => 0,
+                    "Replace" => 2,
+                    "TryAddEnumerable" when !selfRegistration => 3,
+                    _ => 1,
+                };
+                cb.AppendFormatLine("global::Ling.AutoInject.AutoInjectKeyedRegistration.Add(services, ServiceDescriptor.Keyed{0}<{1}>({2}), {3});",
+                    lifetime, types, arguments, strategyValue);
                 return;
             }
-
-            // Microsoft.Extensions.DependencyInjection has no keyed TryAddEnumerable API.
-            // The analyzer reports this invalid combination; retain a safe TryAdd fallback here.
+            // Enumerable descriptors need a distinguishable implementation type. Self
+            // registration has only one implementation, so TryAdd is equivalent here.
             if (strategy == "TryAddEnumerable")
             {
-                strategy = "TryAdd";
+                var descriptor = $"ServiceDescriptor.{lifetime}<{serviceType}, {implementationType}>()";
+                cb.AppendFormatLine("services.{0}({1});", selfRegistration ? "TryAdd" : "TryAddEnumerable", descriptor);
+                return;
             }
+            var isFactory = providedService is not null;
 
             if (isFactory)
             {
-                var factory = $"(sp, key) => ({serviceType})sp.GetRequiredKeyedService<{providedService}>(key)";
+                var factory = $"sp => ({serviceType})sp.GetRequiredService<{providedService}>()";
                 switch (strategy)
                 {
-                    case "Add": cb.AppendFormatLine("services.AddKeyed{0}<{1}>({2}, {3});", lifetime, serviceType, key, factory); break;
-                    case "Replace": cb.AppendFormatLine("services.Replace(ServiceDescriptor.Keyed{0}<{1}>({2}, {3}));", lifetime, serviceType, key, factory); break;
-                    default: cb.AppendFormatLine("services.TryAddKeyed{0}<{1}>({2}, {3});", lifetime, serviceType, key, factory); break;
+                    case "Add": cb.AppendFormatLine("services.Add{0}<{1}>({2});", lifetime, serviceType, factory); break;
+                    case "Replace": cb.AppendFormatLine("services.Replace(ServiceDescriptor.{0}<{1}>({2}));", lifetime, serviceType, factory); break;
+                    default: cb.AppendFormatLine("services.TryAdd{0}<{1}>({2});", lifetime, serviceType, factory); break;
                 }
                 return;
             }
 
-            var keyedGenericTypes = selfRegistration ? implementationType : $"{serviceType}, {implementationType}";
+            var genericTypes = selfRegistration ? implementationType : $"{serviceType}, {implementationType}";
             switch (strategy)
             {
-                case "Add": cb.AppendFormatLine("services.AddKeyed{0}<{1}>({2});", lifetime, keyedGenericTypes, key); break;
-                case "Replace": cb.AppendFormatLine("services.Replace(ServiceDescriptor.Keyed{0}<{1}>({2}));", lifetime, keyedGenericTypes, key); break;
-                default: cb.AppendFormatLine("services.TryAddKeyed{0}<{1}>({2});", lifetime, keyedGenericTypes, key); break;
+                case "Add": cb.AppendFormatLine("services.Add{0}<{1}>();", lifetime, genericTypes); break;
+                case "Replace": cb.AppendFormatLine("services.Replace(ServiceDescriptor.{0}<{1}>());", lifetime, genericTypes); break;
+                default: cb.AppendFormatLine("services.TryAdd{0}<{1}>();", lifetime, genericTypes); break;
             }
         }
 
@@ -413,7 +412,8 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
                         var svc = reg.ServiceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
                         EmitRegistration(lifetime, reg, svc, impl, providedService: null, selfRegistration: false);
 
-                        duplicatedServiceDict[(reg.Implementation, reg.ServiceKey)] = svc;
+                        // Interface registrations may already be supplied or later replaced
+                        // by another implementation. Never use them as alias anchors.
                     }
                 }
             }

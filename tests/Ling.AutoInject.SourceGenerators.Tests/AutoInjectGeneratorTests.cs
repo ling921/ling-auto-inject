@@ -31,6 +31,9 @@ public class AutoInjectGeneratorTests
             ("AutoInjectConfigAttribute.g.cs", SourceCodes.AutoInjectConfigAttribute),
             ("AutoInjectExtensionsAttribute.g.cs", SourceCodes.AutoInjectExtensionsAttribute),
             ("AutoInjectAttribute.g.cs", SourceCodes.AutoInjectAttribute),
+#if NET8_0_OR_GREATER
+            ("AutoInjectKeyedRegistration.g.cs", SourceCodes.KeyedRegistration),
+#endif
             ("SingletonServiceAttribute.g.cs", SourceCodes.SingletonServiceAttribute),
             ("ScopedServiceAttribute.g.cs", SourceCodes.ScopedServiceAttribute),
             ("TransientServiceAttribute.g.cs", SourceCodes.TransientServiceAttribute),
@@ -79,7 +82,7 @@ public class AutoInjectGeneratorTests
                     /// <returns>The IServiceCollection for chaining.</returns>
                     public static IServiceCollection AddTestProjectServices(this IServiceCollection services)
                     {
-                        if (services == null) throw new ArgumentNullException(nameof(services));
+                        if (services == null) throw new global::System.ArgumentNullException(nameof(services));
 
                         AddSingletonServices(services);
                         AddScopedServices(services);
@@ -116,6 +119,9 @@ public class AutoInjectGeneratorTests
             ("AutoInjectConfigAttribute.g.cs", SourceCodes.AutoInjectConfigAttribute),
             ("AutoInjectExtensionsAttribute.g.cs", SourceCodes.AutoInjectExtensionsAttribute),
             ("AutoInjectAttribute.g.cs", SourceCodes.AutoInjectAttribute),
+#if NET8_0_OR_GREATER
+            ("AutoInjectKeyedRegistration.g.cs", SourceCodes.KeyedRegistration),
+#endif
             ("SingletonServiceAttribute.g.cs", SourceCodes.SingletonServiceAttribute),
             ("ScopedServiceAttribute.g.cs", SourceCodes.ScopedServiceAttribute),
             ("TransientServiceAttribute.g.cs", SourceCodes.TransientServiceAttribute),
@@ -156,7 +162,7 @@ public class AutoInjectGeneratorTests
                     /// <returns>The IServiceCollection for chaining.</returns>
                     public static IServiceCollection AddCustomServices(this IServiceCollection services)
                     {
-                        if (services == null) throw new ArgumentNullException(nameof(services));
+                        if (services == null) throw new global::System.ArgumentNullException(nameof(services));
 
                         AddSingletonServices(services);
                         AddScopedServices(services);
@@ -231,7 +237,7 @@ public class AutoInjectGeneratorTests
                     /// <returns>The IServiceCollection for chaining.</returns>
                     public static IServiceCollection AddCustomServices(this IServiceCollection services)
                     {
-                        if (services == null) throw new ArgumentNullException(nameof(services));
+                        if (services == null) throw new global::System.ArgumentNullException(nameof(services));
 
                         AddSingletonServices(services);
                         AddScopedServices(services);
@@ -307,7 +313,7 @@ public class AutoInjectGeneratorTests
                     /// <returns>The IServiceCollection for chaining.</returns>
                     public static IServiceCollection AddCustomServices(this IServiceCollection services, global::Microsoft.Extensions.Configuration.IConfiguration configuration)
                     {
-                        if (services == null) throw new ArgumentNullException(nameof(services));
+                        if (services == null) throw new global::System.ArgumentNullException(nameof(services));
 
                         AddSingletonServices(services);
                         AddScopedServices(services);
@@ -458,7 +464,7 @@ public class AutoInjectGeneratorTests
             source,
             expectedSingletonServices: """
                 services.TryAddSingleton<global::Test.IFoo, global::Test.MyService>();
-                services.TryAddSingleton<global::Test.IBar>(sp => (global::Test.IBar)sp.GetRequiredService<global::Test.IFoo>());
+                services.TryAddSingleton<global::Test.IBar, global::Test.MyService>();
                 """,
             expectedScopedServices: string.Empty,
             expectedTransientServices: string.Empty);
@@ -483,12 +489,6 @@ public class AutoInjectGeneratorTests
             public sealed class MyService : IFoo;
             """;
 
-#if !NET8_0_OR_GREATER
-        if (strategy == "Replace")
-        {
-            expectedRegistration = "services.TryAddSingleton<global::Test.IFoo, global::Test.MyService>();";
-        }
-#endif
         await VerifyGeneratedCodeAsync(source, expectedRegistration, string.Empty, string.Empty);
     }
 
@@ -565,19 +565,19 @@ public class AutoInjectGeneratorTests
         var expectedSingletonServices = lifetime == "Singleton"
             ? """
               services.TryAddSingleton<global::Test.IFoo, global::Test.MyService>();
-              services.TryAddSingleton<global::Test.IBar>(sp => (global::Test.IBar)sp.GetRequiredService<global::Test.IFoo>());
+              services.TryAddSingleton<global::Test.IBar, global::Test.MyService>();
               """
             : string.Empty;
         var expectedScopedServices = lifetime == "Scoped"
             ? """
               services.TryAddScoped<global::Test.IFoo, global::Test.MyService>();
-              services.TryAddScoped<global::Test.IBar>(sp => (global::Test.IBar)sp.GetRequiredService<global::Test.IFoo>());
+              services.TryAddScoped<global::Test.IBar, global::Test.MyService>();
               """
             : string.Empty;
         var expectedTransientServices = lifetime == "Transient"
             ? """
               services.TryAddTransient<global::Test.IFoo, global::Test.MyService>();
-              services.TryAddTransient<global::Test.IBar>(sp => (global::Test.IBar)sp.GetRequiredService<global::Test.IFoo>());
+              services.TryAddTransient<global::Test.IBar, global::Test.MyService>();
               """
             : string.Empty;
 
@@ -649,21 +649,21 @@ public class AutoInjectGeneratorTests
 
         var expectedSingletonServices = lifetime == "Singleton"
 #if NET8_0_OR_GREATER
-            ? """services.TryAddKeyedSingleton<global::Test.MyService>("k1");"""
+            ? """global::Ling.AutoInject.AutoInjectKeyedRegistration.Add(services, ServiceDescriptor.KeyedSingleton<global::Test.MyService, global::Test.MyService>("k1"), 1);"""
 #else
             ? "services.TryAddSingleton<global::Test.MyService>();"
 #endif
             : string.Empty;
         var expectedScopedServices = lifetime == "Scoped"
 #if NET8_0_OR_GREATER
-            ? """services.TryAddKeyedScoped<global::Test.MyService>("k1");"""
+            ? """global::Ling.AutoInject.AutoInjectKeyedRegistration.Add(services, ServiceDescriptor.KeyedScoped<global::Test.MyService, global::Test.MyService>("k1"), 1);"""
 #else
             ? "services.TryAddScoped<global::Test.MyService>();"
 #endif
             : string.Empty;
         var expectedTransientServices = lifetime == "Transient"
 #if NET8_0_OR_GREATER
-            ? """services.TryAddKeyedTransient<global::Test.MyService>("k1");"""
+            ? """global::Ling.AutoInject.AutoInjectKeyedRegistration.Add(services, ServiceDescriptor.KeyedTransient<global::Test.MyService, global::Test.MyService>("k1"), 1);"""
 #else
             ? "services.TryAddTransient<global::Test.MyService>();"
 #endif
@@ -699,21 +699,21 @@ public class AutoInjectGeneratorTests
 
         var expectedSingletonServices = lifetime == "Singleton"
 #if NET8_0_OR_GREATER
-            ? "services.TryAddKeyedSingleton<global::Test.IFoo, global::Test.MyService>(1);"
+            ? "global::Ling.AutoInject.AutoInjectKeyedRegistration.Add(services, ServiceDescriptor.KeyedSingleton<global::Test.IFoo, global::Test.MyService>(1), 1);"
 #else
             ? "services.TryAddSingleton<global::Test.IFoo, global::Test.MyService>();"
 #endif
             : string.Empty;
         var expectedScopedServices = lifetime == "Scoped"
 #if NET8_0_OR_GREATER
-            ? "services.TryAddKeyedScoped<global::Test.IFoo, global::Test.MyService>(1);"
+            ? "global::Ling.AutoInject.AutoInjectKeyedRegistration.Add(services, ServiceDescriptor.KeyedScoped<global::Test.IFoo, global::Test.MyService>(1), 1);"
 #else
             ? "services.TryAddScoped<global::Test.IFoo, global::Test.MyService>();"
 #endif
             : string.Empty;
         var expectedTransientServices = lifetime == "Transient"
 #if NET8_0_OR_GREATER
-            ? "services.TryAddKeyedTransient<global::Test.IFoo, global::Test.MyService>(1);"
+            ? "global::Ling.AutoInject.AutoInjectKeyedRegistration.Add(services, ServiceDescriptor.KeyedTransient<global::Test.IFoo, global::Test.MyService>(1), 1);"
 #else
             ? "services.TryAddTransient<global::Test.IFoo, global::Test.MyService>();"
 #endif
@@ -752,8 +752,8 @@ public class AutoInjectGeneratorTests
         var expectedSingletonServices = lifetime == "Singleton"
 #if NET8_0_OR_GREATER
             ? """
-              services.TryAddKeyedSingleton<global::Test.MyService>("my-key");
-              services.TryAddKeyedSingleton<global::Test.IFoo>("my-key", (sp, key) => (global::Test.IFoo)sp.GetRequiredKeyedService<global::Test.MyService>(key));
+              global::Ling.AutoInject.AutoInjectKeyedRegistration.Add(services, ServiceDescriptor.KeyedSingleton<global::Test.MyService, global::Test.MyService>("my-key"), 1);
+              global::Ling.AutoInject.AutoInjectKeyedRegistration.Add(services, ServiceDescriptor.KeyedSingleton<global::Test.IFoo>("my-key", (sp, key) => (global::Test.IFoo)sp.GetRequiredKeyedService<global::Test.MyService>(key)), 1);
               """
 #else
             ? """
@@ -765,8 +765,8 @@ public class AutoInjectGeneratorTests
         var expectedScopedServices = lifetime == "Scoped"
 #if NET8_0_OR_GREATER
             ? """
-              services.TryAddKeyedScoped<global::Test.MyService>("my-key");
-              services.TryAddKeyedScoped<global::Test.IFoo>("my-key", (sp, key) => (global::Test.IFoo)sp.GetRequiredKeyedService<global::Test.MyService>(key));
+              global::Ling.AutoInject.AutoInjectKeyedRegistration.Add(services, ServiceDescriptor.KeyedScoped<global::Test.MyService, global::Test.MyService>("my-key"), 1);
+              global::Ling.AutoInject.AutoInjectKeyedRegistration.Add(services, ServiceDescriptor.KeyedScoped<global::Test.IFoo>("my-key", (sp, key) => (global::Test.IFoo)sp.GetRequiredKeyedService<global::Test.MyService>(key)), 1);
               """
 #else
             ? """
@@ -778,8 +778,8 @@ public class AutoInjectGeneratorTests
         var expectedTransientServices = lifetime == "Transient"
 #if NET8_0_OR_GREATER
             ? """
-              services.TryAddKeyedTransient<global::Test.MyService>("my-key");
-              services.TryAddKeyedTransient<global::Test.IFoo>("my-key", (sp, key) => (global::Test.IFoo)sp.GetRequiredKeyedService<global::Test.MyService>(key));
+              global::Ling.AutoInject.AutoInjectKeyedRegistration.Add(services, ServiceDescriptor.KeyedTransient<global::Test.MyService, global::Test.MyService>("my-key"), 1);
+              global::Ling.AutoInject.AutoInjectKeyedRegistration.Add(services, ServiceDescriptor.KeyedTransient<global::Test.IFoo>("my-key", (sp, key) => (global::Test.IFoo)sp.GetRequiredKeyedService<global::Test.MyService>(key)), 1);
               """
 #else
             ? """
@@ -826,8 +826,8 @@ public class AutoInjectGeneratorTests
         var expectedSingletonServices =
 #if NET8_0_OR_GREATER
             """
-            services.TryAddKeyedSingleton<global::Test.FooService>(1);
-            services.TryAddKeyedSingleton<global::Test.IFoo>(1, (sp, key) => (global::Test.IFoo)sp.GetRequiredKeyedService<global::Test.FooService>(key));
+            global::Ling.AutoInject.AutoInjectKeyedRegistration.Add(services, ServiceDescriptor.KeyedSingleton<global::Test.FooService, global::Test.FooService>(1), 1);
+            global::Ling.AutoInject.AutoInjectKeyedRegistration.Add(services, ServiceDescriptor.KeyedSingleton<global::Test.IFoo>(1, (sp, key) => (global::Test.IFoo)sp.GetRequiredKeyedService<global::Test.FooService>(key)), 1);
             """;
 #else
             """
@@ -838,8 +838,8 @@ public class AutoInjectGeneratorTests
         var expectedScopedServices =
 #if NET8_0_OR_GREATER
             """
-            services.TryAddKeyedScoped<global::Test.BarService>("k1");
-            services.TryAddKeyedScoped<global::Test.IBar, global::Test.BarService>("k2");
+            global::Ling.AutoInject.AutoInjectKeyedRegistration.Add(services, ServiceDescriptor.KeyedScoped<global::Test.BarService, global::Test.BarService>("k1"), 1);
+            global::Ling.AutoInject.AutoInjectKeyedRegistration.Add(services, ServiceDescriptor.KeyedScoped<global::Test.IBar, global::Test.BarService>("k2"), 1);
             """;
 #else
             """
@@ -850,8 +850,8 @@ public class AutoInjectGeneratorTests
         var expectedTransientServices =
 #if NET8_0_OR_GREATER
             """
-            services.TryAddKeyedTransient<global::Test.IBaz, global::Test.BazService>(1.1);
-            services.TryAddKeyedTransient<global::Test.IBaz, global::Test.BazService>(1.2);
+            global::Ling.AutoInject.AutoInjectKeyedRegistration.Add(services, ServiceDescriptor.KeyedTransient<global::Test.IBaz, global::Test.BazService>(1.1), 1);
+            global::Ling.AutoInject.AutoInjectKeyedRegistration.Add(services, ServiceDescriptor.KeyedTransient<global::Test.IBaz, global::Test.BazService>(1.2), 1);
             """;
 #else
             """

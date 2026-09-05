@@ -83,7 +83,20 @@ public class FooService : IFoo, IBar { }
 public class MemoryCache : ICache { }
 ```
 
-`RegisterImplementedInterfaces = true` registers every implemented interface. Keyed registrations cannot use `TryAddEnumerable`; the analyzer reports that invalid combination.
+`RegisterImplementedInterfaces = true` registers all interfaces, including inherited interfaces, without registering the class itself. Each interface maps directly to the implementation and has its own lifetime cache. This prevents an existing or replaced interface registration from redirecting another interface to the wrong implementation. To share a scoped/singleton instance with the default strategy, add a separate self-registration attribute.
+
+`Strategy` defaults to `TryAdd` on both unified and lifetime-specific attributes:
+
+| Strategy | Behavior |
+| --- | --- |
+| `Add` | Appends a registration each time the generated method runs. |
+| `TryAdd` | Preserves an existing registration for the same service type and key. |
+| `Replace` | Removes the first registration with the same service type and key, then appends the new one. |
+| `TryAddEnumerable` | Adds each distinct implementation once for the same service type and key. Self-registration uses equivalent `TryAdd` semantics. Interface registrations retain separate instances even when a self-registration is present. |
+
+Keyed registrations support all four strategies with DI Abstractions 8.0+. A null key means unkeyed registration; array keys are rejected because they use reference equality. On older DI versions, keys are ignored with `LAI101`. The new `Strategy = Replace` works for unkeyed services on every supported DI version. The legacy `Replace = true` property takes precedence over `Strategy` and keeps its existing pre-8 warning/fallback behavior.
+
+Invalid enum values and empty interface registration sets produce `LAI009`. Named `ServiceType` on `AutoInject` overrides its constructor service type. Existing lifetime attributes and generated entry points remain available. Compared with 1.2, interface-only registrations no longer implicitly share instances by forwarding through the first registered interface.
 
 ### Replace existing registrations
 

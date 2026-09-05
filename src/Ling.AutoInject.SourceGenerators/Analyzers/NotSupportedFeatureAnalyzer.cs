@@ -33,7 +33,6 @@ internal sealed class NotSupportedFeatureAnalyzer : DiagnosticAnalyzer
         DiagnosticDescriptors.NotSupportedKeyedServiceRule,
         DiagnosticDescriptors.NotSupportedReplaceServiceRule,
         DiagnosticDescriptors.RequiredServiceTypeForReplaceRule,
-        DiagnosticDescriptors.KeyedTryAddEnumerableRule,
     ];
 
     /// <inheritdoc/>
@@ -51,24 +50,6 @@ internal sealed class NotSupportedFeatureAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        if (attributeArgument.NameEquals?.Name.Identifier.Text is "Strategy"
-            && context.SemanticModel.GetConstantValue(attributeArgument.Expression, context.CancellationToken).Value is int strategy
-            && strategy == 3)
-        {
-            var attributeSyntax = attributeArgument.FirstAncestorOrSelf<AttributeSyntax>();
-            var attributeTypeSymbol = attributeSyntax is null
-                ? null
-                : context.SemanticModel.GetSymbolInfo(attributeSyntax, context.CancellationToken).Symbol?.ContainingType;
-            var symbols = new AutoInjectSymbols(context.SemanticModel.Compilation);
-            if (symbols.IsAutoInjectAttribute(attributeTypeSymbol)
-                && attributeSyntax!.ArgumentList?.Arguments.Any(a => a.NameEquals?.Name.Identifier.Text is "ServiceKey") == true)
-            {
-                context.ReportDiagnostic(Diagnostic.Create(
-                    DiagnosticDescriptors.KeyedTryAddEnumerableRule,
-                    attributeArgument.GetLocation()));
-            }
-        }
-
         var version = context.SemanticModel.Compilation.FindReferenceAssemblyVersionByTypeMetadataName(Constants.ServiceCollectionServiceExtensionsFullName);
 
         if (version >= Constants.SupportKeyedServiceVersion)
@@ -79,8 +60,7 @@ internal sealed class NotSupportedFeatureAnalyzer : DiagnosticAnalyzer
             }
 
             var expression = attributeArgument.Expression;
-            if (expression is not LiteralExpressionSyntax literalExpression ||
-                literalExpression.IsKind(SyntaxKind.FalseLiteralExpression))
+            if (context.SemanticModel.GetConstantValue(expression).Value is not true)
             {
                 return;
             }
@@ -99,7 +79,10 @@ internal sealed class NotSupportedFeatureAnalyzer : DiagnosticAnalyzer
                 return;
             }
 
-            if (!HasServiceType(attributeSyntax))
+            if (!HasServiceType(attributeSyntax)
+                && !attributeSyntax.ArgumentList!.Arguments.Any(a =>
+                    a.NameEquals?.Name.Identifier.Text == "RegisterImplementedInterfaces"
+                    && context.SemanticModel.GetConstantValue(a.Expression).Value is true))
             {
                 var diagnostic = Diagnostic.Create(
                     DiagnosticDescriptors.RequiredServiceTypeForReplaceRule,
@@ -124,6 +107,13 @@ internal sealed class NotSupportedFeatureAnalyzer : DiagnosticAnalyzer
             var attributeTypeSymbol = attributeSymbol?.ContainingType;
             var symbols = new AutoInjectSymbols(context.SemanticModel.Compilation);
             if (!symbols.IsAutoInjectAttribute(attributeTypeSymbol))
+            {
+                return;
+            }
+
+            if (attributeArgument.NameEquals?.Name.Identifier.Text is "ServiceKey"
+                && context.SemanticModel.GetConstantValue(attributeArgument.Expression).HasValue
+                && context.SemanticModel.GetConstantValue(attributeArgument.Expression).Value is null)
             {
                 return;
             }

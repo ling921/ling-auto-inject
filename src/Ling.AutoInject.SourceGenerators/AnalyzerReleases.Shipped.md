@@ -7,7 +7,7 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|--------------------
-LAI105  | Design | Error | `TryAddEnumerable` cannot be used with a keyed registration.
+LAI009  | Design | Error | Invalid lifetime, strategy, service key, or empty implemented-interface registration.
 
 
 ## Release 1.2.0

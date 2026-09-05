@@ -1,4 +1,5 @@
 using Ling.AutoInject.SourceGenerators.Diagnostics;
+using Ling.AutoInject.SourceGenerators.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -33,6 +34,7 @@ internal sealed class AutoInjectAttributeAnalyzer : DiagnosticAnalyzer
         DiagnosticDescriptors.ConflictingLifetimeRule,
         DiagnosticDescriptors.ServiceTypeMismatchRule,
         DiagnosticDescriptors.UnsupportedRegistrationTargetRule,
+        DiagnosticDescriptors.InvalidRegistrationOptionsRule,
     ];
 
     /// <inheritdoc/>
@@ -84,7 +86,20 @@ internal sealed class AutoInjectAttributeAnalyzer : DiagnosticAnalyzer
             var lifetime = symbols.GetLifetime(attr.AttributeClass) ?? GetUnifiedLifetime(attr);
             if (lifetime is null)
             {
+                context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.InvalidRegistrationOptionsRule,
+                    location, "Lifetime must be Singleton, Scoped, or Transient"));
                 continue;
+            }
+            var strategy = attr.GetNamedArgument("Strategy");
+            if (strategy.Value is int strategyValue && (strategyValue < 0 || strategyValue > 3))
+            {
+                context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.InvalidRegistrationOptionsRule,
+                    location, "Strategy must be Add, TryAdd, Replace, or TryAddEnumerable"));
+            }
+            if (attr.GetNamedArgument("ServiceKey").Kind == TypedConstantKind.Array)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.InvalidRegistrationOptionsRule,
+                    location, "ServiceKey cannot be an array because array keys use reference equality"));
             }
             var conflictingLifetime = cache.Keys.FirstOrDefault(lt => lt != lifetime);
             if (conflictingLifetime is not null && lifetime != conflictingLifetime)
@@ -99,28 +114,23 @@ internal sealed class AutoInjectAttributeAnalyzer : DiagnosticAnalyzer
 
             var (serviceType, serviceKey) = GetAttributeArguments(attr, symbols);
 
-            // Duplicate attribute check
-            if (cache.TryGetValue(lifetime, out var attrList))
+            var interfaces = attr.GetNamedArgument("RegisterImplementedInterfaces").Value is true;
+            var serviceTypes = new HashSet<INamedTypeSymbol?>(SymbolEqualityComparer.Default);
+            if (interfaces) serviceTypes.UnionWith(typeSymbol.AllInterfaces);
+            if (!interfaces || serviceType is not null) serviceTypes.Add(serviceType);
+            if (serviceTypes.Count == 0)
             {
-                if (attrList.Any(a =>
-                    SymbolEqualityComparer.Default.Equals(a.ServiceType, serviceType) &&
-                    a.ServiceKey == serviceKey))
-                {
-                    var diagnostic = Diagnostic.Create(
-                        DiagnosticDescriptors.DuplicateAttributeRule,
-                        location,
-                        lifetime);
-                    context.ReportDiagnostic(diagnostic);
-                }
-                else
-                {
-                    attrList.Add(new AttributeInfo(serviceType, serviceKey));
-                }
+                context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.InvalidRegistrationOptionsRule,
+                    location, "RegisterImplementedInterfaces requires at least one implemented interface"));
             }
-            else
+
+            if (!cache.TryGetValue(lifetime, out var attrList)) cache[lifetime] = attrList = [];
+            if (serviceTypes.Any(candidate => attrList.Any(a =>
+                SymbolEqualityComparer.Default.Equals(a.ServiceType, candidate) && a.ServiceKey == serviceKey)))
             {
-                cache[lifetime] = [new AttributeInfo(serviceType, serviceKey)];
+                context.ReportDiagnostic(Diagnostic.Create(DiagnosticDescriptors.DuplicateAttributeRule, location, lifetime));
             }
+            attrList.AddRange(serviceTypes.Select(candidate => new AttributeInfo(candidate, serviceKey)));
 
             // Service type mismatch check
             if (serviceType is not null && !typeSymbol.AllInterfaces.Any(i => SymbolEqualityComparer.Default.Equals(i, serviceType)))
@@ -163,7 +173,7 @@ internal sealed class AutoInjectAttributeAnalyzer : DiagnosticAnalyzer
         if (attributeData.ConstructorArguments.Length > serviceTypeArgumentIndex)
         {
             var serviceTypeArgument = attributeData.ConstructorArguments[serviceTypeArgumentIndex];
-            if (!serviceTypeArgument.IsNull && serviceType is null)
+            if (!serviceTypeArgument.IsNull && !attributeData.NamedArguments.Any(a => a.Key == "ServiceType"))
             {
                 serviceType = serviceTypeArgument.Value as INamedTypeSymbol;
             }

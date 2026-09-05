@@ -83,7 +83,20 @@ public class FooService : IFoo, IBar { }
 public class MemoryCache : ICache { }
 ```
 
-`AutoInject` 在一个属性中指定生命周期、服务类型和策略；既有生命周期属性仍兼容。`RegisterImplementedInterfaces = true` 会注册全部已实现接口。键控服务不能使用 `TryAddEnumerable`，分析器会报告该无效组合。
+`AutoInject` 在一个属性中指定生命周期、服务类型和策略；既有生命周期属性仍可使用。`RegisterImplementedInterfaces = true` 注册全部已实现接口（包括继承的接口），不会注册类自身。各接口直接映射到实现类型并具有独立的生命周期缓存，避免接口被覆盖后转发到错误对象。如果需要在默认策略下共享 Scoped/Singleton 实例，可额外添加一条自身注册属性。
+
+统一属性和生命周期属性的 `Strategy` 默认均为 `TryAdd`：
+
+| 策略 | 行为 |
+| --- | --- |
+| `Add` | 每次调用生成方法都追加注册。 |
+| `TryAdd` | 已存在相同服务类型和键时保留原注册。 |
+| `Replace` | 删除第一条相同服务类型和键的注册，再追加新注册。 |
+| `TryAddEnumerable` | 按服务类型、键和实现类型去重；自身注册使用等价的 `TryAdd` 行为。即使存在自身注册，各接口也保留独立实例。 |
+
+DI Abstractions 8.0+ 的键控服务支持全部四种策略。null 键表示普通注册；数组键因采用引用相等比较而被拒绝。旧版 DI 会忽略非空键并报告 `LAI101`。新增的 `Strategy = Replace` 在全部受支持 DI 版本上均支持普通注册；旧属性 `Replace = true` 优先于 `Strategy`，保持原有的 pre-8 警告和降级行为。
+
+无效枚举值和空接口集合会报告 `LAI009`。`AutoInject` 的命名参数 `ServiceType` 覆盖构造函数中的服务类型。与 1.2 相比，仅注册接口时不再通过第一个接口隐式共享实例；现有属性及生成的入口方法保持可用。
 
 ## 使用 AutoInjectExtensionsAttribute
 

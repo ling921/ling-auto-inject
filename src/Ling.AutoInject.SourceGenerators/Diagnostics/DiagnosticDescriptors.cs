@@ -71,9 +71,9 @@ internal static class DiagnosticDescriptors
     public const string UnnecessaryConfigUsageId = "LAI104";
 
     /// <summary>
-    /// Diagnostic ID for keyed registrations using the unsupported TryAddEnumerable strategy.
+    /// Diagnostic ID for invalid registration options.
     /// </summary>
-    public const string KeyedTryAddEnumerableId = "LAI105";
+    public const string InvalidRegistrationOptionsId = "LAI009";
 
     /// <summary>
     /// Diagnostic rule for detecting duplicate attributes on a class.
@@ -242,12 +242,12 @@ internal static class DiagnosticDescriptors
         isEnabledByDefault: true);
 
     /// <summary>
-    /// Diagnostic rule for the absence of a keyed equivalent to TryAddEnumerable.
+    /// Diagnostic rule for invalid registration options.
     /// </summary>
-    public static readonly DiagnosticDescriptor KeyedTryAddEnumerableRule = new(
-        id: KeyedTryAddEnumerableId,
-        title: "Unsupported keyed registration strategy",
-        messageFormat: "TryAddEnumerable cannot be used with a keyed service registration",
+    public static readonly DiagnosticDescriptor InvalidRegistrationOptionsRule = new(
+        id: InvalidRegistrationOptionsId,
+        title: "Invalid registration options",
+        messageFormat: "Invalid AutoInject registration: {0}",
         category: "Design",
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);
