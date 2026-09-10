@@ -32,9 +32,9 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
                     var attrs = namedTypeSymbol.GetAttributes()
                         .Where(ad => symbols.IsAutoInjectAttribute(ad.AttributeClass))
                         .ToImmutableArray();
-                    var options = symbols.AutoOptionsAttributeSymbol is null
-                        ? ImmutableArray<AttributeData>.Empty
-                        : namedTypeSymbol.GetAttributes().Where(ad => SymbolEqualityComparer.Default.Equals(ad.AttributeClass, symbols.AutoOptionsAttributeSymbol)).ToImmutableArray();
+                    var options = namedTypeSymbol.GetAttributes()
+                        .Where(ad => symbols.IsAutoOptionsAttribute(ad.AttributeClass))
+                        .ToImmutableArray();
                     if (attrs.Length > 0 || options.Length > 0)
                     {
                         return new ClassWithAttributes(namedTypeSymbol, attrs, options);
@@ -341,7 +341,7 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         foreach (var option in options.Where(o => o.Module is null).OrderBy(o => o.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)).ThenBy(o => o.Name))
         {
             var type = option.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-            var name = string.IsNullOrEmpty(option.Name) ? "global::Microsoft.Extensions.Options.Options.DefaultName" : $"\"{option.Name!.Replace("\"", "\\\"")}";
+            var name = string.IsNullOrEmpty(option.Name) ? "global::Microsoft.Extensions.Options.Options.DefaultName" : $"\"{option.Name!.Replace("\"", "\\\"")}\"";
             var path = option.SectionPath.Replace("\"", "\\\"");
             cb.AppendFormatLine("var autoOptions{0} = services.AddOptions<{1}>({2}).Bind(configuration.GetSection(\"{3}\"));", optionIndex, type, name, path);
             if (option.ValidateDataAnnotations) cb.AppendFormatLine("autoOptions{0}.ValidateDataAnnotations();", optionIndex);
@@ -548,7 +548,7 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
             foreach (var option in moduleOptions.OrderBy(o => o.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)).ThenBy(o => o.Name))
             {
                 var type = option.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                var name = string.IsNullOrEmpty(option.Name) ? "global::Microsoft.Extensions.Options.Options.DefaultName" : $"\"{option.Name!.Replace("\"", "\\\"")}";
+                var name = string.IsNullOrEmpty(option.Name) ? "global::Microsoft.Extensions.Options.Options.DefaultName" : $"\"{option.Name!.Replace("\"", "\\\"")}\"";
                 var path = option.SectionPath.Replace("\"", "\\\"");
                 moduleCode.AppendFormatLine("var autoOptions{0} = services.AddOptions<{1}>({2}).Bind(configuration.GetSection(\"{3}\"));", moduleOptionIndex, type, name, path);
                 if (option.ValidateDataAnnotations) moduleCode.AppendFormatLine("autoOptions{0}.ValidateDataAnnotations();", moduleOptionIndex);

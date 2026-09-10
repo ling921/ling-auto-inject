@@ -6,6 +6,13 @@
 
 `Ling.AutoInject` 是一个基于属性和 Roslyn 增量源生成器的编译期依赖注入工具。它会发现被标记的服务类型，并生成 `IServiceCollection` 扩展方法完成注册。
 
+## 包
+
+| 包 | 用途 |
+| --- | --- |
+| [`Ling.AutoInject`](src/Ling.AutoInject/README.zh-CN.md) | 核心 DI 属性、源生成器、分析器与生成的注册入口。 |
+| [`Ling.AutoInject.Options`](src/Ling.AutoInject.Options/README.zh-CN.md) | 可选的 `[AutoOptions]` 契约，以及配置绑定和验证依赖。 |
+
 ## 特性
 
 - 使用统一的 `AutoInject`，或 `SingletonService`、`ScopedService` 和 `TransientService` 声明服务生命周期。
@@ -74,7 +81,7 @@ services.AddCustomServices();
 
 ## 高级用法
 
-### Options（1.4 预览）
+### Options
 
 纯 DI 项目无需引入配置依赖；需要 Options 时再安装 `Ling.AutoInject.Options`：
 

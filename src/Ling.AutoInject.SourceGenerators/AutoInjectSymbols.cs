@@ -23,6 +23,12 @@ internal sealed class AutoInjectSymbols(Compilation compilation)
             || SymbolEqualityComparer.Default.Equals(symbol, AutoInjectAttributeSymbol));
     }
 
+    public bool IsAutoOptionsAttribute(INamedTypeSymbol? symbol)
+    {
+        return symbol is not null
+            && symbol.ToDisplayString() == Constants.AutoOptionsAttributeFullName;
+    }
+
     public string? GetLifetime(INamedTypeSymbol? symbol)
     {
         if (SymbolEqualityComparer.Default.Equals(symbol, SingletonServiceAttributeSymbol))
