@@ -16,6 +16,7 @@
 - 可通过程序集级 `AutoInjectConfig` 配置生成方法名、类名和命名空间。
 - 可通过 `AutoInjectExtensionsAttribute` 自定义生成类，并选择是否注入 `IConfiguration`。
 - 内置 Roslyn 分析器，可在 IDE 中检查属性使用和配置错误。
+- 可选安装 `Ling.AutoInject.Options`，提供基于特性的 Options 绑定、命名 Options 与验证。
 
 ## 安装
 
@@ -72,6 +73,33 @@ services.AddCustomServices();
 ```
 
 ## 高级用法
+
+### Options（1.4 预览）
+
+纯 DI 项目无需引入配置依赖；需要 Options 时再安装 `Ling.AutoInject.Options`：
+
+```csharp
+using Ling.AutoInject.Options;
+
+[AutoOptions("Clients:Primary", Name = "primary", ValidateDataAnnotations = true)]
+public sealed class ClientOptions { }
+```
+
+包含 Options 的生成入口显式接收 `IConfiguration`，使用 `AddOptions<T>().Bind(configuration.GetSection(...))`。分析器会检查节路径与同类型同名称的重复注册。
+
+### 模块化注册
+
+使用顶级 `static partial` 类划分独立的注册模块。总入口会恰好调用每个模块一次，因此既可以调用总入口，也可以按需调用某一个模块：
+
+```csharp
+[AutoInjectModule(MethodName = "AddWebModule")]
+public static partial class WebModule { }
+
+[ScopedService(typeof(IEndpoint), Module = typeof(WebModule))]
+public sealed class Endpoint : IEndpoint { }
+```
+
+`[AutoOptions]` 同样支持 `Module`。含 Options 的模块会接收 `IConfiguration`，纯 DI 模块则不需要。分析器会拒绝未标记、嵌套、泛型、非静态或非 partial 的模块目标。
 
 ### 统一属性、接口注册与策略
 

@@ -25,10 +25,25 @@ internal static class CSharpAnalyzerVerifier<TAnalyzer>
 
         test.TestState.Sources.Add(("AutoInjectConfigAttribute.g.cs", SourceCodes.AutoInjectConfigAttribute));
         test.TestState.Sources.Add(("AutoInjectExtensionsAttribute.g.cs", SourceCodes.AutoInjectExtensionsAttribute));
+        test.TestState.Sources.Add(("AutoInjectModuleAttribute.g.cs", SourceCodes.AutoInjectModuleAttribute));
         test.TestState.Sources.Add(("AutoInjectAttribute.g.cs", SourceCodes.AutoInjectAttribute));
         test.TestState.Sources.Add(("SingletonServiceAttribute.g.cs", SourceCodes.SingletonServiceAttribute));
         test.TestState.Sources.Add(("ScopedServiceAttribute.g.cs", SourceCodes.ScopedServiceAttribute));
         test.TestState.Sources.Add(("TransientServiceAttribute.g.cs", SourceCodes.TransientServiceAttribute));
+        test.TestState.Sources.Add(("AutoOptionsAttribute.cs", """
+            namespace Ling.AutoInject.Options
+            {
+                [global::System.AttributeUsage(global::System.AttributeTargets.Class, AllowMultiple = true)]
+                public sealed class AutoOptionsAttribute(string sectionPath) : global::System.Attribute
+                {
+                    public string SectionPath { get; } = sectionPath;
+                    public string? Name { get; set; }
+                    public bool ValidateDataAnnotations { get; set; }
+                    public bool ValidateOnStart { get; set; }
+                    public global::System.Type? Module { get; set; }
+                }
+            }
+            """));
 
         await test.RunAsync();
     }

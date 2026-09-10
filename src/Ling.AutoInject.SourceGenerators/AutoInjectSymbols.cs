@@ -6,6 +6,8 @@ internal sealed class AutoInjectSymbols(Compilation compilation)
 {
     public INamedTypeSymbol AutoInjectConfigAttributeSymbol { get; } = compilation.GetTypeByMetadataName(Constants.AutoInjectConfigAttributeFullName)!;
     public INamedTypeSymbol AutoInjectExtensionsAttributeSymbol { get; } = compilation.GetTypeByMetadataName(Constants.AutoInjectExtensionsAttributeFullName)!;
+    public INamedTypeSymbol AutoInjectModuleAttributeSymbol { get; } = compilation.GetTypeByMetadataName(Constants.AutoInjectModuleAttributeFullName)!;
+    public INamedTypeSymbol? AutoOptionsAttributeSymbol { get; } = compilation.GetTypeByMetadataName(Constants.AutoOptionsAttributeFullName);
     public INamedTypeSymbol AutoInjectAttributeSymbol { get; } = compilation.GetTypeByMetadataName(Constants.AutoInjectAttributeFullName)!;
 
     public INamedTypeSymbol SingletonServiceAttributeSymbol { get; } = compilation.GetTypeByMetadataName(Constants.SingletonServiceAttributeFullName)!;

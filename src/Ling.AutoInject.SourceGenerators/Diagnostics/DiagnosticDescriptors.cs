@@ -69,6 +69,10 @@ internal static class DiagnosticDescriptors
     /// Diagnostic ID for rule <see cref="UnnecessaryConfigUsageRule"/>.
     /// </summary>
     public const string UnnecessaryConfigUsageId = "LAI104";
+    public const string InvalidOptionsPathId = "LAI105";
+    public const string DuplicateOptionsId = "LAI106";
+    public const string UnsupportedOptionsFeatureId = "LAI107";
+    public const string InvalidModuleReferenceId = "LAI108";
 
     /// <summary>
     /// Diagnostic ID for invalid registration options.
@@ -251,4 +255,13 @@ internal static class DiagnosticDescriptors
         category: "Design",
         DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor InvalidOptionsPathRule = new(
+        InvalidOptionsPathId, "Invalid options section path", "The options section path '{0}' is invalid", "Design", DiagnosticSeverity.Error, true);
+    public static readonly DiagnosticDescriptor DuplicateOptionsRule = new(
+        DuplicateOptionsId, "Duplicate options registration", "Options type '{0}' is registered more than once with name '{1}'", "Design", DiagnosticSeverity.Error, true);
+    public static readonly DiagnosticDescriptor UnsupportedOptionsFeatureRule = new(
+        UnsupportedOptionsFeatureId, "Unsupported options feature", "{0}", "Compatibility", DiagnosticSeverity.Error, true);
+    public static readonly DiagnosticDescriptor InvalidModuleReferenceRule = new(
+        InvalidModuleReferenceId, "Invalid AutoInject module", "{0}", "Design", DiagnosticSeverity.Error, true);
 }

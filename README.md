@@ -13,12 +13,40 @@
 - Service replacement support: use `Replace = true` to replace existing registrations instead of skipping when a service is already registered.
 - Explicit `Add`, `TryAdd`, `Replace`, and `TryAddEnumerable` strategies, plus declarative registration of all implemented interfaces.
 - Class-level customization via `AutoInjectExtensionsAttribute` for control over method generation behavior, including optional `IConfiguration` parameter support.
+- Optional `Ling.AutoInject.Options` package for attribute-driven Options binding, validation, and named options.
 
 ## Usage
 
 For detailed usage instructions, including installation, attribute-based registration, and more, see the [package README](src/Ling.AutoInject/README.md).
 
 Version 1.3 adds `[AutoInject(ServiceLifetime.Scoped, RegisterImplementedInterfaces = true)]`. Interfaces are registered directly with independent lifetime caches; all four strategies support keyed services on DI 8.0+. See the package README for instance-sharing and compatibility details.
+
+## Options (1.4 preview)
+
+Install `Ling.AutoInject.Options` to register configuration-bound options without adding configuration dependencies to DI-only projects:
+
+```csharp
+using Ling.AutoInject.Options;
+
+[AutoOptions("Clients:Primary", Name = "primary", ValidateDataAnnotations = true)]
+public sealed class ClientOptions { }
+```
+
+Generated entry points that contain Options accept `IConfiguration` and bind with `AddOptions<T>().Bind(configuration.GetSection(...))`. Section paths and duplicate type/name registrations are validated by analyzers.
+
+### Modules
+
+Use a top-level `static partial` class to group registrations into an independently callable entry point. The aggregate entry point calls every module once, so applications can use either the aggregate method or selected modules.
+
+```csharp
+[AutoInjectModule(MethodName = "AddWebModule")]
+public static partial class WebModule { }
+
+[ScopedService(typeof(IEndpoint), Module = typeof(WebModule))]
+public sealed class Endpoint : IEndpoint { }
+```
+
+`Module` is also available on `[AutoOptions]`. A module that owns Options accepts `IConfiguration`; a DI-only module does not. The analyzer rejects non-module, nested, generic, non-static, or non-partial module targets.
 
 ## Development
 - Build: `dotnet build`
