@@ -325,6 +325,7 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         if (includeConfiguration)
         {
             cb.AppendLine("if (configuration == null) throw new global::System.ArgumentNullException(nameof(configuration));");
+            if (options.Any(o => o.Module is null)) cb.AppendLine("services.AddSingleton<global::Microsoft.Extensions.Configuration.IConfiguration>(configuration);");
         }
         cb.AppendLine();
         cb.AppendLine("AddSingletonServices(services);");
@@ -336,7 +337,7 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
             var type = option.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
             var name = string.IsNullOrEmpty(option.Name) ? "global::Microsoft.Extensions.Options.Options.DefaultName" : $"\"{option.Name!.Replace("\"", "\\\"")}\"";
             var path = option.SectionPath.Replace("\"", "\\\"");
-            cb.AppendFormatLine("var autoOptions{0} = services.AddOptions<{1}>({2}).Bind(configuration.GetSection(\"{3}\"));", optionIndex, type, name, path);
+            cb.AppendFormatLine("var autoOptions{0} = services.AddOptions<{1}>({2}).BindConfiguration(\"{3}\");", optionIndex, type, name, path);
             if (option.ValidateDataAnnotations) cb.AppendFormatLine("autoOptions{0}.ValidateDataAnnotations();", optionIndex);
             if (option.ValidateOnStart) cb.AppendFormatLine("autoOptions{0}.ValidateOnStart();", optionIndex);
             optionIndex++;
@@ -533,7 +534,11 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
             }
             moduleCode.OpenBrace();
             moduleCode.AppendLine("if (services == null) throw new global::System.ArgumentNullException(nameof(services));");
-            if (moduleNeedsConfiguration) moduleCode.AppendLine("if (configuration == null) throw new global::System.ArgumentNullException(nameof(configuration));");
+            if (moduleNeedsConfiguration)
+            {
+                moduleCode.AppendLine("if (configuration == null) throw new global::System.ArgumentNullException(nameof(configuration));");
+                if (moduleOptions.Any()) moduleCode.AppendLine("services.AddSingleton<global::Microsoft.Extensions.Configuration.IConfiguration>(configuration);");
+            }
             moduleCode.AppendLine("AddSingletonServices(services);");
             moduleCode.AppendLine("AddScopedServices(services);");
             moduleCode.AppendLine("AddTransientServices(services);");
@@ -543,7 +548,7 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
                 var type = option.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
                 var name = string.IsNullOrEmpty(option.Name) ? "global::Microsoft.Extensions.Options.Options.DefaultName" : $"\"{option.Name!.Replace("\"", "\\\"")}\"";
                 var path = option.SectionPath.Replace("\"", "\\\"");
-                moduleCode.AppendFormatLine("var autoOptions{0} = services.AddOptions<{1}>({2}).Bind(configuration.GetSection(\"{3}\"));", moduleOptionIndex, type, name, path);
+                moduleCode.AppendFormatLine("var autoOptions{0} = services.AddOptions<{1}>({2}).BindConfiguration(\"{3}\");", moduleOptionIndex, type, name, path);
                 if (option.ValidateDataAnnotations) moduleCode.AppendFormatLine("autoOptions{0}.ValidateDataAnnotations();", moduleOptionIndex);
                 if (option.ValidateOnStart) moduleCode.AppendFormatLine("autoOptions{0}.ValidateOnStart();", moduleOptionIndex);
                 moduleOptionIndex++;

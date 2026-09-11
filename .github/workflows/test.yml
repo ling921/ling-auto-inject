@@ -126,10 +126,9 @@ jobs:
               public string Greet(string name) => $"{options.Value.Prefix}, {name}!";
           }
 
-          [AutoOptions("Greeting", ValidateDataAnnotations = true, ValidateOnStart = true, Module = typeof(AotProbeModule))]
+          [AutoOptions("Greeting", ValidateOnStart = true, Module = typeof(AotProbeModule))]
           public sealed class GreetingOptions
           {
-              [Required]
               public string Prefix { get; set; } = string.Empty;
           }
           EOF
