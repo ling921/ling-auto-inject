@@ -31,7 +31,9 @@ jobs:
         run: dotnet run --project samples/Ling.AutoInject.Sample/Ling.AutoInject.Sample.csproj --configuration Release --no-build
 
       - name: Pack
-        run: dotnet pack src/Ling.AutoInject/Ling.AutoInject.csproj --configuration Release --no-build --output artifacts/packages
+        run: |
+          dotnet pack src/Ling.AutoInject/Ling.AutoInject.csproj --configuration Release --no-build --output artifacts/packages
+          dotnet pack src/Ling.AutoInject.Options/Ling.AutoInject.Options.csproj --configuration Release --no-build --output artifacts/packages
 
       - name: NuGet login
         uses: NuGet/login@v1

@@ -18,6 +18,11 @@
                       OutputItemType="Analyzer"
                       ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\src\Ling.AutoInject\Ling.AutoInject.csproj" />
+    <ProjectReference Include="..\..\src\Ling.AutoInject.Options\Ling.AutoInject.Options.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

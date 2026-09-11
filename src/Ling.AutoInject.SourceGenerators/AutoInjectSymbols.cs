@@ -6,6 +6,8 @@ internal sealed class AutoInjectSymbols(Compilation compilation)
 {
     public INamedTypeSymbol AutoInjectConfigAttributeSymbol { get; } = compilation.GetTypeByMetadataName(Constants.AutoInjectConfigAttributeFullName)!;
     public INamedTypeSymbol AutoInjectExtensionsAttributeSymbol { get; } = compilation.GetTypeByMetadataName(Constants.AutoInjectExtensionsAttributeFullName)!;
+    public INamedTypeSymbol AutoInjectModuleAttributeSymbol { get; } = compilation.GetTypeByMetadataName(Constants.AutoInjectModuleAttributeFullName)!;
+    public INamedTypeSymbol? AutoOptionsAttributeSymbol { get; } = compilation.GetTypeByMetadataName(Constants.AutoOptionsAttributeFullName);
     public INamedTypeSymbol AutoInjectAttributeSymbol { get; } = compilation.GetTypeByMetadataName(Constants.AutoInjectAttributeFullName)!;
 
     public INamedTypeSymbol SingletonServiceAttributeSymbol { get; } = compilation.GetTypeByMetadataName(Constants.SingletonServiceAttributeFullName)!;
@@ -19,6 +21,12 @@ internal sealed class AutoInjectSymbols(Compilation compilation)
             || SymbolEqualityComparer.Default.Equals(symbol, ScopedServiceAttributeSymbol)
             || SymbolEqualityComparer.Default.Equals(symbol, TransientServiceAttributeSymbol)
             || SymbolEqualityComparer.Default.Equals(symbol, AutoInjectAttributeSymbol));
+    }
+
+    public bool IsAutoOptionsAttribute(INamedTypeSymbol? symbol)
+    {
+        return symbol is not null
+            && symbol.ToDisplayString() == Constants.AutoOptionsAttributeFullName;
     }
 
     public string? GetLifetime(INamedTypeSymbol? symbol)

@@ -314,6 +314,7 @@ public class AutoInjectGeneratorTests
                     public static IServiceCollection AddCustomServices(this IServiceCollection services, global::Microsoft.Extensions.Configuration.IConfiguration configuration)
                     {
                         if (services == null) throw new global::System.ArgumentNullException(nameof(services));
+                        if (configuration == null) throw new global::System.ArgumentNullException(nameof(configuration));
 
                         AddSingletonServices(services);
                         AddScopedServices(services);

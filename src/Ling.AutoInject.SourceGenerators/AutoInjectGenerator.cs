@@ -32,9 +32,12 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
                     var attrs = namedTypeSymbol.GetAttributes()
                         .Where(ad => symbols.IsAutoInjectAttribute(ad.AttributeClass))
                         .ToImmutableArray();
-                    if (attrs.Length > 0)
+                    var options = namedTypeSymbol.GetAttributes()
+                        .Where(ad => symbols.IsAutoOptionsAttribute(ad.AttributeClass))
+                        .ToImmutableArray();
+                    if (attrs.Length > 0 || options.Length > 0)
                     {
-                        return new ClassWithAttributes(namedTypeSymbol, attrs);
+                        return new ClassWithAttributes(namedTypeSymbol, attrs, options);
                     }
                 }
 
@@ -52,6 +55,7 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
     {
         context.AddSourceWithCrlf("AutoInjectConfigAttribute.g.cs", SourceCodes.AutoInjectConfigAttribute);
         context.AddSourceWithCrlf("AutoInjectExtensionsAttribute.g.cs", SourceCodes.AutoInjectExtensionsAttribute);
+        context.AddSourceWithCrlf("AutoInjectModuleAttribute.g.cs", SourceCodes.AutoInjectModuleAttribute);
         context.AddSourceWithCrlf("AutoInjectAttribute.g.cs", SourceCodes.AutoInjectAttribute);
         context.AddSourceWithCrlf("SingletonServiceAttribute.g.cs", SourceCodes.SingletonServiceAttribute);
         context.AddSourceWithCrlf("ScopedServiceAttribute.g.cs", SourceCodes.ScopedServiceAttribute);
@@ -65,6 +69,7 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         AnalyzerConfigOptionsProvider analyzerConfigOptionsProvider)
     {
         var registrations = new List<RegistrationInfo>();
+        var options = new List<OptionsInfo>();
         var symbols = new AutoInjectSymbols(compilation);
 
         var targetVerison = compilation.FindReferenceAssemblyVersionByTypeMetadataName(Constants.ServiceCollectionServiceExtensionsFullName);
@@ -79,11 +84,13 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         foreach (var cwa in classes)
         {
             var classSymbol = cwa.ClassSymbol;
-            if (!visited.Add(classSymbol) || !IsSupportedRegistrationType(classSymbol))
+            if (!visited.Add(classSymbol))
             {
                 continue;
             }
 
+            if (IsSupportedRegistrationType(classSymbol))
+            {
             var attrData = cwa.Attributes;
 
             var regList = new List<RegistrationInfo>();
@@ -109,6 +116,7 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
                 var replaceTypedConstant = ad.GetNamedArgument("Replace");
                 var strategyTypedConstant = ad.GetNamedArgument("Strategy");
                 var registerImplementedInterfacesTypedConstant = ad.GetNamedArgument("RegisterImplementedInterfaces");
+                var moduleTypedConstant = ad.GetNamedArgument("Module");
 
                 var serviceType = serviceTypedConstant.Value as INamedTypeSymbol;
                 var serviceKey = serviceKeyTypedConstant.IsNull ? null : serviceKeyTypedConstant.ToCSharpString();
@@ -117,6 +125,7 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
                 var registerImplementedInterfaces = !registerImplementedInterfacesTypedConstant.IsNull
                     && registerImplementedInterfacesTypedConstant.Value is bool rii
                     && rii;
+                var module = moduleTypedConstant.Value as INamedTypeSymbol;
 
                 // Retain the legacy Replace property's pre-8 fallback. The new Strategy
                 // uses unkeyed Replace on every supported DI version.
@@ -147,7 +156,7 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
                     // Avoid duplicate registrations
                     if (!serviceRegistrationSet.Contains((registrationServiceType, serviceKey)))
                     {
-                        regList.Add(new RegistrationInfo(classSymbol, lifetime, registrationServiceType, serviceKey, strategy));
+                        regList.Add(new RegistrationInfo(classSymbol, lifetime, registrationServiceType, serviceKey, strategy, module));
                         serviceRegistrationSet.Add((registrationServiceType, serviceKey));
                     }
                 }
@@ -156,15 +165,31 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
             registrations.AddRange(regList
                 .OrderBy(r => r.ServiceType is null ? 0 : 1)
                 .ThenBy(r => r.Strategy == "Replace" ? 1 : 0));
+            }
+
+            if (IsSupportedRegistrationType(classSymbol))
+            {
+                foreach (var ad in cwa.OptionsAttributes)
+                {
+                    var path = ad.GetConstructorArgument(0).Value as string;
+                    if (string.IsNullOrWhiteSpace(path)) continue;
+                    options.Add(new OptionsInfo(classSymbol, path!,
+                        ad.GetNamedArgument("Name").Value as string,
+                        ad.GetNamedArgument("ValidateDataAnnotations").Value is bool data && data,
+                        ad.GetNamedArgument("ValidateOnStart").Value is bool start && start,
+                        ad.GetNamedArgument("Module").Value as INamedTypeSymbol));
+                }
+            }
         }
 
         var assemblyName = compilation.AssemblyName ?? "Generated";
         var sanitized = SanitizeIdentifier(assemblyName);
+        var modules = GetModules(compilation, symbols);
 
         var @namespace = compilation.GetNamespace(analyzerConfigOptionsProvider) ?? "Ling.AutoInject";
         var className = $"{sanitized}_AutoInjectGenerated";
         var methodName = $"Add{sanitized}Services";
-        var includeConfiguration = false;
+        var includeConfiguration = options.Count > 0;
 
         #region Read configuration
 
@@ -304,10 +329,36 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         }
         cb.OpenBrace();
         cb.AppendLine("if (services == null) throw new global::System.ArgumentNullException(nameof(services));");
+        if (includeConfiguration)
+        {
+            cb.AppendLine("if (configuration == null) throw new global::System.ArgumentNullException(nameof(configuration));");
+        }
         cb.AppendLine();
         cb.AppendLine("AddSingletonServices(services);");
         cb.AppendLine("AddScopedServices(services);");
         cb.AppendLine("AddTransientServices(services);");
+        var optionIndex = 0;
+        foreach (var option in options.Where(o => o.Module is null).OrderBy(o => o.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)).ThenBy(o => o.Name))
+        {
+            var type = option.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            var name = string.IsNullOrEmpty(option.Name) ? "global::Microsoft.Extensions.Options.Options.DefaultName" : $"\"{option.Name!.Replace("\"", "\\\"")}\"";
+            var path = option.SectionPath.Replace("\"", "\\\"");
+            cb.AppendFormatLine("var autoOptions{0} = services.AddOptions<{1}>({2}).Bind(configuration.GetSection(\"{3}\"));", optionIndex, type, name, path);
+            if (option.ValidateDataAnnotations) cb.AppendFormatLine("autoOptions{0}.ValidateDataAnnotations();", optionIndex);
+            if (option.ValidateOnStart) cb.AppendFormatLine("autoOptions{0}.ValidateOnStart();", optionIndex);
+            optionIndex++;
+        }
+        foreach (var module in modules.OrderBy(m => m.Symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)))
+        {
+            if (options.Any(o => SymbolEqualityComparer.Default.Equals(o.Module, module.Symbol)))
+            {
+                cb.AppendFormatLine("{0}.{1}(services, configuration);", module.Symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), module.MethodName);
+            }
+            else
+            {
+                cb.AppendFormatLine("{0}.{1}(services);", module.Symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), module.MethodName);
+            }
+        }
         if (includeConfiguration)
         {
             cb.AppendLine("AddAdditionalServices(services, configuration);");
@@ -321,7 +372,7 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         cb.CloseBrace();
         cb.AppendLine();
 
-        void EmitRegistration(string lifetime, RegistrationInfo registration, string serviceType, string implementationType, string? providedService, bool selfRegistration)
+        void EmitRegistration(CodeBuilder destination, string lifetime, RegistrationInfo registration, string serviceType, string implementationType, string? providedService, bool selfRegistration)
         {
             var key = registration.ServiceKey;
             var strategy = registration.Strategy;
@@ -341,7 +392,7 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
                     "TryAddEnumerable" when !selfRegistration => 3,
                     _ => 1,
                 };
-                cb.AppendFormatLine("global::Ling.AutoInject.AutoInjectKeyedRegistration.Add(services, ServiceDescriptor.Keyed{0}<{1}>({2}), {3});",
+                destination.AppendFormatLine("global::Ling.AutoInject.AutoInjectKeyedRegistration.Add(services, ServiceDescriptor.Keyed{0}<{1}>({2}), {3});",
                     lifetime, types, arguments, strategyValue);
                 return;
             }
@@ -350,7 +401,7 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
             if (strategy == "TryAddEnumerable")
             {
                 var descriptor = $"ServiceDescriptor.{lifetime}<{serviceType}, {implementationType}>()";
-                cb.AppendFormatLine("services.{0}({1});", selfRegistration ? "TryAdd" : "TryAddEnumerable", descriptor);
+                destination.AppendFormatLine("services.{0}({1});", selfRegistration ? "TryAdd" : "TryAddEnumerable", descriptor);
                 return;
             }
             var isFactory = providedService is not null;
@@ -360,9 +411,9 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
                 var factory = $"sp => ({serviceType})sp.GetRequiredService<{providedService}>()";
                 switch (strategy)
                 {
-                    case "Add": cb.AppendFormatLine("services.Add{0}<{1}>({2});", lifetime, serviceType, factory); break;
-                    case "Replace": cb.AppendFormatLine("services.Replace(ServiceDescriptor.{0}<{1}>({2}));", lifetime, serviceType, factory); break;
-                    default: cb.AppendFormatLine("services.TryAdd{0}<{1}>({2});", lifetime, serviceType, factory); break;
+                    case "Add": destination.AppendFormatLine("services.Add{0}<{1}>({2});", lifetime, serviceType, factory); break;
+                    case "Replace": destination.AppendFormatLine("services.Replace(ServiceDescriptor.{0}<{1}>({2}));", lifetime, serviceType, factory); break;
+                    default: destination.AppendFormatLine("services.TryAdd{0}<{1}>({2});", lifetime, serviceType, factory); break;
                 }
                 return;
             }
@@ -370,21 +421,21 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
             var genericTypes = selfRegistration ? implementationType : $"{serviceType}, {implementationType}";
             switch (strategy)
             {
-                case "Add": cb.AppendFormatLine("services.Add{0}<{1}>();", lifetime, genericTypes); break;
-                case "Replace": cb.AppendFormatLine("services.Replace(ServiceDescriptor.{0}<{1}>());", lifetime, genericTypes); break;
-                default: cb.AppendFormatLine("services.TryAdd{0}<{1}>();", lifetime, genericTypes); break;
+                case "Add": destination.AppendFormatLine("services.Add{0}<{1}>();", lifetime, genericTypes); break;
+                case "Replace": destination.AppendFormatLine("services.Replace(ServiceDescriptor.{0}<{1}>());", lifetime, genericTypes); break;
+                default: destination.AppendFormatLine("services.TryAdd{0}<{1}>();", lifetime, genericTypes); break;
             }
         }
 
         // Helper to emit a lifetime-specific private method using CodeBuilder (reduces duplication)
-        void EmitLifetimeMethod(string lifetime)
+        void EmitLifetimeMethod(CodeBuilder destination, string lifetime, IEnumerable<RegistrationInfo> sourceRegistrations)
         {
-            cb.AppendFormatLine("private static void Add{0}Services(IServiceCollection services)", lifetime);
-            cb.OpenBrace();
+            destination.AppendFormatLine("private static void Add{0}Services(IServiceCollection services)", lifetime);
+            destination.OpenBrace();
 
             // Track emitted registrations to avoid duplicates instance resolutions
             var duplicatedServiceDict = new Dictionary<(INamedTypeSymbol Implementation, string? ServiceKey), string>();
-            foreach (var reg in registrations.Where(r => r.Lifetime == lifetime))
+            foreach (var reg in sourceRegistrations.Where(r => r.Lifetime == lifetime))
             {
                 if (duplicatedServiceDict.TryGetValue((reg.Implementation, reg.ServiceKey), out var providedService))
                 {
@@ -396,21 +447,21 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
 
                     var svc = reg.ServiceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
                     var impl = reg.Implementation.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                    EmitRegistration(lifetime, reg, svc, impl, providedService, selfRegistration: false);
+                    EmitRegistration(destination, lifetime, reg, svc, impl, providedService, selfRegistration: false);
                 }
                 else
                 {
                     var impl = reg.Implementation.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
                     if (reg.ServiceType is null)
                     {
-                        EmitRegistration(lifetime, reg, impl, impl, providedService: null, selfRegistration: true);
+                        EmitRegistration(destination, lifetime, reg, impl, impl, providedService: null, selfRegistration: true);
 
                         duplicatedServiceDict[(reg.Implementation, reg.ServiceKey)] = impl;
                     }
                     else
                     {
                         var svc = reg.ServiceType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                        EmitRegistration(lifetime, reg, svc, impl, providedService: null, selfRegistration: false);
+                        EmitRegistration(destination, lifetime, reg, svc, impl, providedService: null, selfRegistration: false);
 
                         // Interface registrations may already be supplied or later replaced
                         // by another implementation. Never use them as alias anchors.
@@ -418,15 +469,16 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
                 }
             }
 
-            cb.CloseBrace();
+            destination.CloseBrace();
         }
 
         // emit the three private methods with shared logic
-        EmitLifetimeMethod("Singleton");
+        var unmoduledRegistrations = registrations.Where(r => r.Module is null).ToArray();
+        EmitLifetimeMethod(cb, "Singleton", unmoduledRegistrations);
         cb.AppendLine();
-        EmitLifetimeMethod("Scoped");
+        EmitLifetimeMethod(cb, "Scoped", unmoduledRegistrations);
         cb.AppendLine();
-        EmitLifetimeMethod("Transient");
+        EmitLifetimeMethod(cb, "Transient", unmoduledRegistrations);
 
         // generate a partial method to allow customization
         cb.AppendLine();
@@ -453,6 +505,68 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
 
         var hintName = $"AutoInject_{sanitized}.g.cs";
         context.AddSourceWithCrlf(hintName, cb.ToString());
+
+        foreach (var module in modules)
+        {
+            var moduleRegistrations = registrations.Where(r => SymbolEqualityComparer.Default.Equals(r.Module, module.Symbol)).ToArray();
+            var moduleOptions = options.Where(o => SymbolEqualityComparer.Default.Equals(o.Module, module.Symbol)).ToArray();
+            if (moduleRegistrations.Length == 0 && moduleOptions.Length == 0) continue;
+
+            var moduleCode = new CodeBuilder();
+            moduleCode.AppendLine("// <auto-generated />");
+            moduleCode.AppendLine();
+            moduleCode.AppendLine("#pragma warning disable");
+            moduleCode.AppendLine("#nullable enable annotations");
+            moduleCode.AppendLine();
+            moduleCode.AppendLine("using Microsoft.Extensions.DependencyInjection;");
+            moduleCode.AppendLine("using Microsoft.Extensions.DependencyInjection.Extensions;");
+            moduleCode.AppendLine();
+            var moduleNamespace = module.Symbol.ContainingNamespace.ToDisplayString();
+            if (!module.Symbol.ContainingNamespace.IsGlobalNamespace)
+            {
+                moduleCode.AppendFormatLine("namespace {0}", moduleNamespace);
+                moduleCode.OpenBrace();
+            }
+            moduleCode.AppendFormatLine("static partial class {0}", module.Symbol.Name);
+            moduleCode.OpenBrace();
+            var moduleNeedsConfiguration = moduleOptions.Length > 0;
+            if (moduleNeedsConfiguration)
+            {
+                moduleCode.AppendFormatLine("public static IServiceCollection {0}(this IServiceCollection services, global::Microsoft.Extensions.Configuration.IConfiguration configuration)", module.MethodName);
+            }
+            else
+            {
+                moduleCode.AppendFormatLine("public static IServiceCollection {0}(this IServiceCollection services)", module.MethodName);
+            }
+            moduleCode.OpenBrace();
+            moduleCode.AppendLine("if (services == null) throw new global::System.ArgumentNullException(nameof(services));");
+            if (moduleNeedsConfiguration) moduleCode.AppendLine("if (configuration == null) throw new global::System.ArgumentNullException(nameof(configuration));");
+            moduleCode.AppendLine("AddSingletonServices(services);");
+            moduleCode.AppendLine("AddScopedServices(services);");
+            moduleCode.AppendLine("AddTransientServices(services);");
+            var moduleOptionIndex = 0;
+            foreach (var option in moduleOptions.OrderBy(o => o.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)).ThenBy(o => o.Name))
+            {
+                var type = option.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                var name = string.IsNullOrEmpty(option.Name) ? "global::Microsoft.Extensions.Options.Options.DefaultName" : $"\"{option.Name!.Replace("\"", "\\\"")}\"";
+                var path = option.SectionPath.Replace("\"", "\\\"");
+                moduleCode.AppendFormatLine("var autoOptions{0} = services.AddOptions<{1}>({2}).Bind(configuration.GetSection(\"{3}\"));", moduleOptionIndex, type, name, path);
+                if (option.ValidateDataAnnotations) moduleCode.AppendFormatLine("autoOptions{0}.ValidateDataAnnotations();", moduleOptionIndex);
+                if (option.ValidateOnStart) moduleCode.AppendFormatLine("autoOptions{0}.ValidateOnStart();", moduleOptionIndex);
+                moduleOptionIndex++;
+            }
+            moduleCode.AppendLine("return services;");
+            moduleCode.CloseBrace();
+            moduleCode.AppendLine();
+            EmitLifetimeMethod(moduleCode, "Singleton", moduleRegistrations);
+            moduleCode.AppendLine();
+            EmitLifetimeMethod(moduleCode, "Scoped", moduleRegistrations);
+            moduleCode.AppendLine();
+            EmitLifetimeMethod(moduleCode, "Transient", moduleRegistrations);
+            moduleCode.CloseBrace();
+            if (!module.Symbol.ContainingNamespace.IsGlobalNamespace) moduleCode.CloseBrace();
+            context.AddSourceWithCrlf($"AutoInject_Module_{SanitizeIdentifier(module.Symbol.ToDisplayString())}.g.cs", moduleCode.ToString());
+        }
     }
 
     private static string SanitizeIdentifier(string name)
@@ -466,6 +580,37 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         if (sb.Length == 0) sb.Append("A");
         if (char.IsDigit(sb[0])) sb.Insert(0, '_');
         return sb.ToString();
+    }
+
+    private static ImmutableArray<ModuleInfo> GetModules(Compilation compilation, AutoInjectSymbols symbols)
+    {
+        var modules = new Dictionary<INamedTypeSymbol, ModuleInfo>(SymbolEqualityComparer.Default);
+        foreach (var tree in compilation.SyntaxTrees)
+        {
+            var model = compilation.GetSemanticModel(tree);
+            foreach (var declaration in tree.GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>())
+            {
+                if (model.GetDeclaredSymbol(declaration) is not INamedTypeSymbol symbol
+                    || symbol.ContainingType is not null
+                    || !symbol.IsStatic
+                    || HasTypeParameters(symbol)
+                    || !declaration.Modifiers.Any(SyntaxKind.PartialKeyword))
+                {
+                    continue;
+                }
+
+                var attribute = symbol.GetAttributes().FirstOrDefault(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, symbols.AutoInjectModuleAttributeSymbol));
+                if (attribute is null) continue;
+                var configuredName = attribute.GetNamedArgument("MethodName").Value as string;
+                var methodName = string.IsNullOrWhiteSpace(configuredName) ? $"Add{symbol.Name}" : configuredName!;
+                if (!modules.ContainsKey(symbol))
+                {
+                    modules.Add(symbol, new ModuleInfo(symbol, methodName));
+                }
+            }
+        }
+
+        return modules.Values.ToImmutableArray();
     }
 
     private static bool IsSupportedRegistrationType(INamedTypeSymbol typeSymbol)
@@ -489,7 +634,9 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         return false;
     }
 
-    private record ClassWithAttributes(INamedTypeSymbol ClassSymbol, ImmutableArray<AttributeData> Attributes);
+    private record ClassWithAttributes(INamedTypeSymbol ClassSymbol, ImmutableArray<AttributeData> Attributes, ImmutableArray<AttributeData> OptionsAttributes);
+    private record OptionsInfo(INamedTypeSymbol Type, string SectionPath, string? Name, bool ValidateDataAnnotations, bool ValidateOnStart, INamedTypeSymbol? Module);
+    private record ModuleInfo(INamedTypeSymbol Symbol, string MethodName);
     private static string? GetLifetime(TypedConstant value)
     {
         return value.Value switch
@@ -512,5 +659,5 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         };
     }
 
-    private record RegistrationInfo(INamedTypeSymbol Implementation, string Lifetime, INamedTypeSymbol? ServiceType, string? ServiceKey, string Strategy);
+    private record RegistrationInfo(INamedTypeSymbol Implementation, string Lifetime, INamedTypeSymbol? ServiceType, string? ServiceKey, string Strategy, INamedTypeSymbol? Module);
 }

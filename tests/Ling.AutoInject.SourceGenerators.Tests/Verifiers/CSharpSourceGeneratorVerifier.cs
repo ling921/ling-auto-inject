@@ -28,7 +28,17 @@ internal static partial class CSharpSourceGeneratorVerifier<TSourceGenerator>
             },
         };
 
-        foreach (var (fileName, generatedCode) in generatedSources)
+        var allSources = generatedSources.ToList();
+        var extensionIndex = allSources.FindIndex(x => x.Item1 == "AutoInjectExtensionsAttribute.g.cs");
+        allSources.Insert(extensionIndex + 1, ("AutoInjectModuleAttribute.g.cs", SourceCodes.AutoInjectModuleAttribute));
+        var keyedIndex = allSources.FindIndex(x => x.Item1 == "AutoInjectKeyedRegistration.g.cs");
+        if (keyedIndex >= 0)
+        {
+            var keyed = allSources[keyedIndex];
+            allSources.RemoveAt(keyedIndex);
+            allSources.Insert(allSources.Count - 1, keyed);
+        }
+        foreach (var (fileName, generatedCode) in allSources)
         {
             var sourceText = NewLineRegex().Replace(generatedCode, "\r\n");
 

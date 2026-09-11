@@ -10,6 +10,8 @@ internal static class Constants
 
     public const string AutoInjectConfigAttributeFullName = "Ling.AutoInject.AutoInjectConfigAttribute";
     public const string AutoInjectExtensionsAttributeFullName = "Ling.AutoInject.AutoInjectExtensionsAttribute";
+    public const string AutoInjectModuleAttributeFullName = "Ling.AutoInject.AutoInjectModuleAttribute";
+    public const string AutoOptionsAttributeFullName = "Ling.AutoInject.Options.AutoOptionsAttribute";
     public const string AutoInjectAttributeFullName = "Ling.AutoInject.AutoInjectAttribute";
 
     public const string TransientServiceAttributeFullName = "Ling.AutoInject.TransientServiceAttribute";
