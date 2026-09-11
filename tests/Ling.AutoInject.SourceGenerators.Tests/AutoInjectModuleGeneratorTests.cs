@@ -89,7 +89,7 @@ public sealed class AutoInjectModuleGeneratorTests
 
         Assert.Contains("global::Test.GreetingModule.AddGreetingModule(services, configuration);", root);
         Assert.Contains("services.AddOptions<global::Test.GreetingOptions>(\"primary\")", module);
-        Assert.Contains(".BindConfiguration(\"Greeting\")", module);
+        Assert.Contains(".Bind(configuration.GetSection(\"Greeting\"))", module);
         Assert.Contains("autoOptions0.ValidateDataAnnotations();", module);
         Assert.Contains("autoOptions0.ValidateOnStart();", module);
     }
