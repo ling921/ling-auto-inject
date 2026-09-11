@@ -87,6 +87,7 @@ jobs:
       - name: Publish and run Native AOT sample
         if: matrix.framework == 'net10.0'
         run: |
+          dotnet restore samples/Ling.AutoInject.Sample/Ling.AutoInject.Sample.csproj --runtime linux-x64
           dotnet publish samples/Ling.AutoInject.Sample/Ling.AutoInject.Sample.csproj --configuration Release --runtime linux-x64 --self-contained true --no-restore -p:BuildProjectReferences=false -p:PublishAot=true -p:PublishTrimmed=true --output artifacts/aot-sample
           artifacts/aot-sample/Ling.AutoInject.Sample
 
