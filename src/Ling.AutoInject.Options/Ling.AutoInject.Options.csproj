@@ -18,9 +18,11 @@
     <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Ling.AutoInject\Ling.AutoInject.csproj" />
+    <ProjectReference Include="..\Ling.AutoInject\Ling.AutoInject.csproj"
+                      GlobalPropertiesToRemove="PublishAot;PublishTrimmed" />
     <ProjectReference Include="..\Ling.AutoInject.SourceGenerators\Ling.AutoInject.SourceGenerators.csproj"
-                      ReferenceOutputAssembly="false" PrivateAssets="all" />
+                      ReferenceOutputAssembly="false" PrivateAssets="all"
+                      GlobalPropertiesToRemove="PublishAot;PublishTrimmed" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
     <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" />
   </ItemGroup>

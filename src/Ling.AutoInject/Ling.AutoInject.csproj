@@ -38,7 +38,8 @@
   <!-- Package source generator into analyzers directory -->
   <ItemGroup>
     <ProjectReference Include="..\Ling.AutoInject.SourceGenerators\Ling.AutoInject.SourceGenerators.csproj"
-                      ReferenceOutputAssembly="false" PrivateAssets="all" />
+                      ReferenceOutputAssembly="false" PrivateAssets="all"
+                      GlobalPropertiesToRemove="PublishAot;PublishTrimmed" />
   </ItemGroup>
 
   <Target Name="_AddAnalyzer" BeforeTargets="GetTargetPath" Condition="'$(TargetFramework)' == 'netstandard2.0'">

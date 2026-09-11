@@ -17,9 +17,12 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Ling.AutoInject.SourceGenerators\Ling.AutoInject.SourceGenerators.csproj"
                       OutputItemType="Analyzer"
-                      ReferenceOutputAssembly="false" />
-    <ProjectReference Include="..\..\src\Ling.AutoInject\Ling.AutoInject.csproj" />
-    <ProjectReference Include="..\..\src\Ling.AutoInject.Options\Ling.AutoInject.Options.csproj" />
+                      ReferenceOutputAssembly="false"
+                      GlobalPropertiesToRemove="PublishAot;PublishTrimmed" />
+    <ProjectReference Include="..\..\src\Ling.AutoInject\Ling.AutoInject.csproj"
+                      GlobalPropertiesToRemove="PublishAot;PublishTrimmed" />
+    <ProjectReference Include="..\..\src\Ling.AutoInject.Options\Ling.AutoInject.Options.csproj"
+                      GlobalPropertiesToRemove="PublishAot;PublishTrimmed" />
   </ItemGroup>
 
   <ItemGroup>
