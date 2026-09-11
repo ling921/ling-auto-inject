@@ -29,13 +29,13 @@ namespace Ling.AutoInject.SourceGenerators.Analyzers;
 internal sealed class AutoInjectAttributeAnalyzer : DiagnosticAnalyzer
 {
     /// <inheritdoc/>
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
         DiagnosticDescriptors.DuplicateAttributeRule,
         DiagnosticDescriptors.ConflictingLifetimeRule,
         DiagnosticDescriptors.ServiceTypeMismatchRule,
         DiagnosticDescriptors.UnsupportedRegistrationTargetRule,
-        DiagnosticDescriptors.InvalidRegistrationOptionsRule,
-    ];
+        DiagnosticDescriptors.InvalidRegistrationOptionsRule
+    );
 
     /// <inheritdoc/>
     public override void Initialize(AnalysisContext context)

@@ -26,10 +26,10 @@ namespace Ling.AutoInject.SourceGenerators.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 internal sealed class AutoInjectConfigAttributeAnalyzer : DiagnosticAnalyzer
 {
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
         DiagnosticDescriptors.InvalidNamingRule,
-        DiagnosticDescriptors.UnnecessaryConfigUsageRule,
-    ];
+        DiagnosticDescriptors.UnnecessaryConfigUsageRule
+    );
 
     public override void Initialize(AnalysisContext context)
     {

@@ -132,6 +132,13 @@ static partial void AddAdditionalServices(
 - Keyed service 需要 DI Abstractions 包支持对应 API。
 - 抽象类、静态类和包含泛型参数的类型不会被注册。
 - 示例位于仓库的 `samples/Ling.AutoInject.Sample` 目录。
+- 分析器宿主要求 Roslyn 4.3+（Visual Studio 2022 17.3+ 或 .NET SDK 6.0.4xx+），与应用可面向的目标框架无关。
+
+## 路线图
+
+### 2.0 — 跟随 .NET 生命周期
+
+2.0 用于收束独立演进的 1.x 版本线。后续的兼容性策略、分析器宿主支持范围和发布节奏将跟随对应 .NET 版本的支持生命周期；新的 DI 能力会结合该生命周期与社区反馈评估，现有属性和生成入口的兼容性仍是首要原则。
 
 ## 协议
 

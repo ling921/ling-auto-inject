@@ -16,7 +16,7 @@ namespace Ling.AutoInject.SourceGenerators.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 internal sealed class MethodNameConflictAnalyzer : DiagnosticAnalyzer
 {
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [DiagnosticDescriptors.ConflictingExtensionRule];
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(DiagnosticDescriptors.ConflictingExtensionRule);
 
     public override void Initialize(AnalysisContext context)
     {

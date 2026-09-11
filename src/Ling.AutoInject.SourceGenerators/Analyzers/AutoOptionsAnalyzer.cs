@@ -9,9 +9,9 @@ namespace Ling.AutoInject.SourceGenerators.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 internal sealed class AutoOptionsAnalyzer : DiagnosticAnalyzer
 {
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
         DiagnosticDescriptors.InvalidOptionsPathRule, DiagnosticDescriptors.DuplicateOptionsRule,
-        DiagnosticDescriptors.UnsupportedOptionsFeatureRule];
+        DiagnosticDescriptors.UnsupportedOptionsFeatureRule);
 
     public override void Initialize(AnalysisContext context)
     {

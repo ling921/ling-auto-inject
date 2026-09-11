@@ -12,10 +12,10 @@ namespace Ling.AutoInject.SourceGenerators.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 internal sealed class AutoInjectModuleAnalyzer : DiagnosticAnalyzer
 {
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
         DiagnosticDescriptors.InvalidNamingRule,
         DiagnosticDescriptors.RequiredStaticPartialClassRule,
-        DiagnosticDescriptors.InvalidModuleReferenceRule];
+        DiagnosticDescriptors.InvalidModuleReferenceRule);
 
     public override void Initialize(AnalysisContext context)
     {
