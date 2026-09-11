@@ -86,10 +86,56 @@ jobs:
 
       - name: Publish and run Native AOT sample
         if: matrix.framework == 'net10.0'
+        shell: bash
         run: |
-          dotnet restore samples/Ling.AutoInject.Sample/Ling.AutoInject.Sample.csproj --runtime linux-x64
-          dotnet publish samples/Ling.AutoInject.Sample/Ling.AutoInject.Sample.csproj --configuration Release --runtime linux-x64 --self-contained true --no-restore -p:BuildProjectReferences=false -p:PublishAot=true -p:PublishTrimmed=true --output artifacts/aot-sample
-          artifacts/aot-sample/Ling.AutoInject.Sample
+          probe="$(mktemp -d)"
+          pushd "$probe"
+          dotnet new console --framework net10.0 --no-restore
+          sed -i '/<TargetFramework>/a\    <AssemblyName>AotProbe</AssemblyName>\n    <EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>' *.csproj
+          sed -i '/<\/Project>/i\  <ItemGroup>\n    <FrameworkReference Include="Microsoft.AspNetCore.App" />\n  </ItemGroup>' *.csproj
+          dotnet add package Ling.AutoInject --version 1.4.1 --source "$GITHUB_WORKSPACE/artifacts/packages"
+          dotnet add package Ling.AutoInject.Options --version 1.4.1 --source "$GITHUB_WORKSPACE/artifacts/packages"
+          cat > Program.cs <<'EOF'
+          using Ling.AutoInject;
+          using Ling.AutoInject.Options;
+          using Microsoft.Extensions.Configuration;
+          using Microsoft.Extensions.DependencyInjection;
+          using Microsoft.Extensions.Options;
+          using System.ComponentModel.DataAnnotations;
+
+          var services = new ServiceCollection();
+          var configuration = new ConfigurationBuilder()
+              .AddInMemoryCollection(new Dictionary<string, string?> { ["Greeting:Prefix"] = "Hello" })
+              .Build();
+          services.AddAotProbeServices(configuration);
+          using var provider = services.BuildServiceProvider();
+          var greeting = provider.GetRequiredService<IGreetingService>();
+          if (greeting.Greet("AOT") != "Hello, AOT!") throw new InvalidOperationException();
+
+          [AutoInjectExtensions(MethodName = "AddAotProbeServices")]
+          public static partial class AotProbeServiceCollectionExtensions { }
+
+          [AutoInjectModule]
+          public static partial class AotProbeModule { }
+
+          public interface IGreetingService { string Greet(string name); }
+
+          [SingletonService(typeof(IGreetingService))]
+          public sealed class GreetingService(IOptions<GreetingOptions> options) : IGreetingService
+          {
+              public string Greet(string name) => $"{options.Value.Prefix}, {name}!";
+          }
+
+          [AutoOptions("Greeting", ValidateDataAnnotations = true, ValidateOnStart = true, Module = typeof(AotProbeModule))]
+          public sealed class GreetingOptions
+          {
+              [Required]
+              public string Prefix { get; set; } = string.Empty;
+          }
+          EOF
+          dotnet publish --configuration Release --runtime linux-x64 --self-contained true -p:PublishAot=true -p:PublishTrimmed=true -warnaserror --output "$GITHUB_WORKSPACE/artifacts/aot-sample"
+          "$GITHUB_WORKSPACE/artifacts/aot-sample/AotProbe"
+          popd
 
       - name: Upload package artifact
         if: matrix.framework == 'net10.0'
