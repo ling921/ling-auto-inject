@@ -1,6 +1,7 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Ling.AutoInject.SourceGenerators.Helpers;
 
 namespace Ling.AutoInject.SourceGenerators.Extensions;
 
@@ -19,7 +20,7 @@ internal static class CompilationExtensions
             return optionsProvider.GlobalOptions.TryGetValue("build_property.TargetNamespace", out var targetNamespace)
                 && !string.IsNullOrEmpty(targetNamespace)
                 ? targetNamespace
-                : compilation.AssemblyName;
+                : CSharpIdentifierHelper.SanitizeIdentifier(compilation.AssemblyName);
         }
 
         public bool HasClassWithAttribute(INamedTypeSymbol attributeSymbol)

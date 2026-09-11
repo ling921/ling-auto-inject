@@ -49,7 +49,40 @@ jobs:
 
       - name: Pack
         if: matrix.framework == 'net10.0'
-        run: dotnet pack src/Ling.AutoInject/Ling.AutoInject.csproj --configuration Release --no-build --output artifacts/packages
+        run: |
+          dotnet pack src/Ling.AutoInject/Ling.AutoInject.csproj --configuration Release --no-build --output artifacts/packages
+          dotnet pack src/Ling.AutoInject.Options/Ling.AutoInject.Options.csproj --configuration Release --no-build --output artifacts/packages
+
+      - name: Verify packaged analyzer compatibility
+        if: matrix.framework == 'net10.0'
+        shell: bash
+        run: |
+          for spec in "6.0.428 net6.0 6.0.0" "8.0.424 net8.0 8.0.0"; do
+            read -r sdk tfm di_version <<< "$spec"
+            probe="$(mktemp -d)"
+            pushd "$probe"
+            dotnet new globaljson --sdk-version "$sdk" --roll-forward disable
+            dotnet new console --framework "$tfm" --no-restore
+            sed -i '/<TargetFramework>/a\    <AssemblyName>CompatProbe</AssemblyName>' *.csproj
+            dotnet add package Ling.AutoInject --version 1.4.1 --source "$GITHUB_WORKSPACE/artifacts/packages"
+            dotnet add package Microsoft.Extensions.DependencyInjection --version "$di_version"
+            cat > Program.cs <<'EOF'
+          using CompatProbe;
+          using Ling.AutoInject;
+          using Microsoft.Extensions.DependencyInjection;
+
+          var services = new ServiceCollection();
+          services.AddCompatProbeServices();
+          using var provider = services.BuildServiceProvider();
+          _ = provider.GetRequiredService<Marker>();
+
+          [SingletonService]
+          public sealed class Marker { }
+          EOF
+            dotnet build --no-restore -warnaserror
+            dotnet run --no-build
+            popd
+          done
 
       - name: Upload package artifact
         if: matrix.framework == 'net10.0'

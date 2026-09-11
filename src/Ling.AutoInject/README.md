@@ -66,6 +66,7 @@ Install-Package Ling.AutoInject
 - If a service type is specified, the generator registers the mapping from service interface to implementation.
 - Keyed registration requires the DI Abstractions package to support keyed APIs; analyzers warn when unsupported.
 - A runnable record-type registration example is available in the repository under `samples/Ling.AutoInject.Sample`.
+- The analyzer host requires Roslyn 4.3+ (Visual Studio 2022 17.3+ or .NET SDK 6.0.4xx+), independently of the application's target framework.
 
 ## Advanced features
 
@@ -151,32 +152,9 @@ You can implement the `AddAdditionalServices` partial method to add custom servi
 
 ## Roadmap
 
-The project will continue to evolve around three priorities: generator correctness, expressive registration capabilities, and integration with the broader .NET dependency injection ecosystem.
+### Version 2.0 — .NET-aligned lifecycle
 
-### Version 1.2 — Correctness and compatibility
-
-- Unify source generator and analyzer behavior for framework and package version detection.
-- Improve diagnostics for unsupported registration targets, including abstract, static, and generic types.
-- Extend discovery to support record class types and extension hosts declared in the global namespace.
-- Strengthen validation for duplicate registrations, conflicting lifetimes, service type mismatches, and configuration conflicts.
-- Add runtime integration tests in addition to generated-source snapshot tests.
-
-### Version 1.4 — Configuration and modularization
-
-- Add attribute-driven Options registration and configuration binding for `IOptions<T>`-style options classes.
-- Support configuration validation, including startup validation and data annotation validation where applicable.
-- Support module-level registration methods for large applications and multi-module solutions.
-- Allow multiple generated registration entry points where project organization requires them.
-
-### Version 2.0 — Advanced dependency injection scenarios
-
-- Support open generic registrations with appropriate compile-time validation.
-- Support factory, delegate, and instance registrations.
-- Provide decorator and interception-oriented registration capabilities.
-- Add conditional registrations based on configuration or environment.
-- Explore dependency graph diagnostics and visualization for generated registrations.
-
-The roadmap is subject to change based on compatibility requirements, community feedback, and the evolution of the Microsoft.Extensions.DependencyInjection APIs. Backward compatibility with existing attributes and generated registration entry points will remain a primary consideration.
+Version 2.0 closes the standalone 1.x line. Future compatibility policy, supported compiler hosts, and release cadence will follow the support lifecycle of the corresponding .NET releases. New DI capabilities will be evaluated against that lifecycle and community feedback; existing attributes and generated entry points remain compatibility priorities.
 
 ## Contributing
 

@@ -1,10 +1,33 @@
 using VerifyCS = Ling.AutoInject.SourceGenerators.Tests.Verifiers.CSharpSourceGeneratorVerifier<
     Ling.AutoInject.SourceGenerators.AutoInjectGenerator>;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace Ling.AutoInject.SourceGenerators.Tests;
 
 public class AutoInjectGeneratorTests
 {
+    [Theory]
+    [InlineData("my-service", "my_service")]
+    [InlineData("9services", "_9services")]
+    [InlineData("class", "_class")]
+    [InlineData("服务 注册", "服务_注册")]
+    public void DefaultNamespace_IsAlwaysAValidIdentifier(string assemblyName, string expectedNamespace)
+    {
+        var compilation = CSharpCompilation.Create(
+            assemblyName,
+            [CSharpSyntaxTree.ParseText("[Ling.AutoInject.SingletonService] public sealed class Service { }")],
+            [MetadataReference.CreateFromFile(typeof(object).Assembly.Location)],
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(new AutoInjectGenerator());
+
+        var result = driver.RunGenerators(compilation).GetRunResult();
+        var generated = result.Results.Single().GeneratedSources
+            .Single(source => source.HintName.StartsWith("AutoInject_", StringComparison.Ordinal)).SourceText.ToString();
+
+        Assert.Contains($"namespace {expectedNamespace}", generated);
+    }
+
     [Fact]
     public async Task RecordClass_GeneratesRegistration()
     {

@@ -29,11 +29,11 @@ namespace Ling.AutoInject.SourceGenerators.Analyzers;
 internal sealed class NotSupportedFeatureAnalyzer : DiagnosticAnalyzer
 {
     /// <inheritdoc/>
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
         DiagnosticDescriptors.NotSupportedKeyedServiceRule,
         DiagnosticDescriptors.NotSupportedReplaceServiceRule,
-        DiagnosticDescriptors.RequiredServiceTypeForReplaceRule,
-    ];
+        DiagnosticDescriptors.RequiredServiceTypeForReplaceRule
+    );
 
     /// <inheritdoc/>
     public override void Initialize(AnalysisContext context)

@@ -1,4 +1,4 @@
-﻿using Ling.AutoInject.SourceGenerators.Diagnostics;
+using Ling.AutoInject.SourceGenerators.Diagnostics;
 using Ling.AutoInject.SourceGenerators.Helpers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -30,11 +30,11 @@ namespace Ling.AutoInject.SourceGenerators.Analyzers;
 internal sealed class AutoInjectExtensionsAttributeAnalyzer : DiagnosticAnalyzer
 {
     /// <inheritdoc/>
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(
         DiagnosticDescriptors.InvalidNamingRule,
         DiagnosticDescriptors.MultipleExtensionsUsedRule,
-        DiagnosticDescriptors.RequiredStaticPartialClassRule,
-    ];
+        DiagnosticDescriptors.RequiredStaticPartialClassRule
+    );
 
     /// <inheritdoc/>
     public override void Initialize(AnalysisContext context)

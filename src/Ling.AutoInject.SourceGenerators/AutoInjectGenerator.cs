@@ -20,30 +20,23 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         // Generate attribute definitions
         context.RegisterPostInitializationOutput(GenerateAttributes);
 
+        // The DI marker attributes are emitted during post-initialization. Roslyn 4.3
+        // does not feed those generated marker attributes to ForAttributeWithMetadataName,
+        // so use a narrowly filtered syntax provider to preserve registration discovery on
+        // every supported compiler host.
         var classDeclarations = context.SyntaxProvider.CreateSyntaxProvider(
-            predicate: static (node, _) => node is TypeDeclarationSyntax tds && tds.AttributeLists.Count > 0,
-            transform: static (ctx, _) =>
+            predicate: static (node, _) => node is TypeDeclarationSyntax declaration && declaration.AttributeLists.Count > 0,
+            transform: static (syntaxContext, _) =>
             {
-                var typeDecl = (TypeDeclarationSyntax)ctx.Node;
-                var model = ctx.SemanticModel;
-                if (model.GetDeclaredSymbol(typeDecl) is INamedTypeSymbol namedTypeSymbol)
-                {
-                    var symbols = new AutoInjectSymbols(model.Compilation);
-                    var attrs = namedTypeSymbol.GetAttributes()
-                        .Where(ad => symbols.IsAutoInjectAttribute(ad.AttributeClass))
-                        .ToImmutableArray();
-                    var options = namedTypeSymbol.GetAttributes()
-                        .Where(ad => symbols.IsAutoOptionsAttribute(ad.AttributeClass))
-                        .ToImmutableArray();
-                    if (attrs.Length > 0 || options.Length > 0)
-                    {
-                        return new ClassWithAttributes(namedTypeSymbol, attrs, options);
-                    }
-                }
-
-                return null;
+                var classSymbol = (INamedTypeSymbol)syntaxContext.SemanticModel.GetDeclaredSymbol(syntaxContext.Node)!;
+                var symbols = new AutoInjectSymbols(syntaxContext.SemanticModel.Compilation);
+                var attributes = classSymbol.GetAttributes().Where(attribute => symbols.IsAutoInjectAttribute(attribute.AttributeClass)).ToImmutableArray();
+                var options = classSymbol.GetAttributes().Where(attribute => symbols.IsAutoOptionsAttribute(attribute.AttributeClass)).ToImmutableArray();
+                return attributes.Length == 0 && options.Length == 0
+                    ? null
+                    : new ClassWithAttributes(classSymbol, attributes, options);
             })
-            .Where(static x => x != null)
+            .Where(static candidate => candidate is not null)
             .Collect();
 
         var compilationAndClasses = context.CompilationProvider.Combine(context.AnalyzerConfigOptionsProvider.Combine(classDeclarations));
@@ -540,6 +533,7 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
             }
             moduleCode.OpenBrace();
             moduleCode.AppendLine("if (services == null) throw new global::System.ArgumentNullException(nameof(services));");
+            if (moduleNeedsConfiguration)
             if (moduleNeedsConfiguration) moduleCode.AppendLine("if (configuration == null) throw new global::System.ArgumentNullException(nameof(configuration));");
             moduleCode.AppendLine("AddSingletonServices(services);");
             moduleCode.AppendLine("AddScopedServices(services);");
@@ -569,18 +563,7 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
         }
     }
 
-    private static string SanitizeIdentifier(string name)
-    {
-        var sb = new StringBuilder();
-        foreach (var ch in name)
-        {
-            if (char.IsLetterOrDigit(ch) || ch == '_') sb.Append(ch);
-            else sb.Append('_');
-        }
-        if (sb.Length == 0) sb.Append("A");
-        if (char.IsDigit(sb[0])) sb.Insert(0, '_');
-        return sb.ToString();
-    }
+    private static string SanitizeIdentifier(string name) => CSharpIdentifierHelper.SanitizeIdentifier(name, "A");
 
     private static ImmutableArray<ModuleInfo> GetModules(Compilation compilation, AutoInjectSymbols symbols)
     {
