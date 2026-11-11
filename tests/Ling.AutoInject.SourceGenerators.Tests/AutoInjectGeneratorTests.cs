@@ -1,7 +1,7 @@
-using VerifyCS = Ling.AutoInject.SourceGenerators.Tests.Verifiers.CSharpSourceGeneratorVerifier<
-    Ling.AutoInject.SourceGenerators.AutoInjectGenerator>;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using VerifyCS = Ling.AutoInject.SourceGenerators.Tests.Verifiers.CSharpSourceGeneratorVerifier<
+    Ling.AutoInject.SourceGenerators.AutoInjectGenerator>;
 
 namespace Ling.AutoInject.SourceGenerators.Tests;
 

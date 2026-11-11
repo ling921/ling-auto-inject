@@ -1,4 +1,4 @@
-﻿using Ling.AutoInject.SourceGenerators.Analyzers;
+using Ling.AutoInject.SourceGenerators.Analyzers;
 using Ling.AutoInject.SourceGenerators.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
 using VerifyCS = Ling.AutoInject.SourceGenerators.Tests.Verifiers.CSharpAnalyzerVerifier<

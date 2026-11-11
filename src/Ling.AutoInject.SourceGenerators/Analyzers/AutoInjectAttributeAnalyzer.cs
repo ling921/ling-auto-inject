@@ -1,9 +1,9 @@
+using System.Collections.Immutable;
 using Ling.AutoInject.SourceGenerators.Diagnostics;
 using Ling.AutoInject.SourceGenerators.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
-using System.Collections.Immutable;
 
 namespace Ling.AutoInject.SourceGenerators.Analyzers;
 

@@ -1,11 +1,11 @@
+using System.Collections.Immutable;
+using System.Text;
 using Ling.AutoInject.SourceGenerators.Extensions;
 using Ling.AutoInject.SourceGenerators.Helpers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
-using System.Collections.Immutable;
-using System.Text;
 
 namespace Ling.AutoInject.SourceGenerators;
 
@@ -84,80 +84,80 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
 
             if (IsSupportedRegistrationType(classSymbol))
             {
-            var attrData = cwa.Attributes;
+                var attrData = cwa.Attributes;
 
-            var regList = new List<RegistrationInfo>();
-            var serviceRegistrationSet = new HashSet<(INamedTypeSymbol? ServiceType, string? ServiceKey)>();
+                var regList = new List<RegistrationInfo>();
+                var serviceRegistrationSet = new HashSet<(INamedTypeSymbol? ServiceType, string? ServiceKey)>();
 
-            foreach (var ad in attrData)
-            {
-                var isUnifiedAttribute = SymbolEqualityComparer.Default.Equals(ad.AttributeClass, symbols.AutoInjectAttributeSymbol);
-                var lifetime = isUnifiedAttribute
-                    ? GetLifetime(ad.GetConstructorArgument(0))
-                    : symbols.GetLifetime(ad.AttributeClass);
-                if (lifetime is null)
+                foreach (var ad in attrData)
                 {
-                    continue;
-                }
-
-                var serviceTypedConstant = ad.GetConstructorArgument(isUnifiedAttribute ? 1 : 0);
-                if (ad.NamedArguments.Any(a => a.Key == "ServiceType"))
-                {
-                    serviceTypedConstant = ad.GetNamedArgument("ServiceType");
-                }
-                var serviceKeyTypedConstant = ad.GetNamedArgument("ServiceKey");
-                var replaceTypedConstant = ad.GetNamedArgument("Replace");
-                var strategyTypedConstant = ad.GetNamedArgument("Strategy");
-                var registerImplementedInterfacesTypedConstant = ad.GetNamedArgument("RegisterImplementedInterfaces");
-                var moduleTypedConstant = ad.GetNamedArgument("Module");
-
-                var serviceType = serviceTypedConstant.Value as INamedTypeSymbol;
-                var serviceKey = serviceKeyTypedConstant.IsNull ? null : serviceKeyTypedConstant.ToCSharpString();
-                var replace = !replaceTypedConstant.IsNull && replaceTypedConstant.Value is bool b && b;
-                var strategy = replace ? "Replace" : GetStrategy(strategyTypedConstant);
-                var registerImplementedInterfaces = !registerImplementedInterfacesTypedConstant.IsNull
-                    && registerImplementedInterfacesTypedConstant.Value is bool rii
-                    && rii;
-                var module = moduleTypedConstant.Value as INamedTypeSymbol;
-
-                // Retain the legacy Replace property's pre-8 fallback. The new Strategy
-                // uses unkeyed Replace on every supported DI version.
-                if (!supportKeyedService)
-                {
-                    serviceKey = null;
-                    if (replace)
+                    var isUnifiedAttribute = SymbolEqualityComparer.Default.Equals(ad.AttributeClass, symbols.AutoInjectAttributeSymbol);
+                    var lifetime = isUnifiedAttribute
+                        ? GetLifetime(ad.GetConstructorArgument(0))
+                        : symbols.GetLifetime(ad.AttributeClass);
+                    if (lifetime is null)
                     {
-                        strategy = "TryAdd";
+                        continue;
+                    }
+
+                    var serviceTypedConstant = ad.GetConstructorArgument(isUnifiedAttribute ? 1 : 0);
+                    if (ad.NamedArguments.Any(a => a.Key == "ServiceType"))
+                    {
+                        serviceTypedConstant = ad.GetNamedArgument("ServiceType");
+                    }
+                    var serviceKeyTypedConstant = ad.GetNamedArgument("ServiceKey");
+                    var replaceTypedConstant = ad.GetNamedArgument("Replace");
+                    var strategyTypedConstant = ad.GetNamedArgument("Strategy");
+                    var registerImplementedInterfacesTypedConstant = ad.GetNamedArgument("RegisterImplementedInterfaces");
+                    var moduleTypedConstant = ad.GetNamedArgument("Module");
+
+                    var serviceType = serviceTypedConstant.Value as INamedTypeSymbol;
+                    var serviceKey = serviceKeyTypedConstant.IsNull ? null : serviceKeyTypedConstant.ToCSharpString();
+                    var replace = !replaceTypedConstant.IsNull && replaceTypedConstant.Value is bool b && b;
+                    var strategy = replace ? "Replace" : GetStrategy(strategyTypedConstant);
+                    var registerImplementedInterfaces = !registerImplementedInterfacesTypedConstant.IsNull
+                        && registerImplementedInterfacesTypedConstant.Value is bool rii
+                        && rii;
+                    var module = moduleTypedConstant.Value as INamedTypeSymbol;
+
+                    // Retain the legacy Replace property's pre-8 fallback. The new Strategy
+                    // uses unkeyed Replace on every supported DI version.
+                    if (!supportKeyedService)
+                    {
+                        serviceKey = null;
+                        if (replace)
+                        {
+                            strategy = "TryAdd";
+                        }
+                    }
+
+                    var serviceTypes = new HashSet<INamedTypeSymbol?>(SymbolEqualityComparer.Default);
+                    if (registerImplementedInterfaces)
+                    {
+                        serviceTypes.UnionWith(classSymbol.AllInterfaces);
+                    }
+
+                    // A specified service type is additive when interfaces are registered. Without
+                    // the option it retains the existing self-registration behaviour (null value).
+                    if (!registerImplementedInterfaces || serviceType is not null)
+                    {
+                        serviceTypes.Add(serviceType);
+                    }
+
+                    foreach (var registrationServiceType in serviceTypes)
+                    {
+                        // Avoid duplicate registrations
+                        if (!serviceRegistrationSet.Contains((registrationServiceType, serviceKey)))
+                        {
+                            regList.Add(new RegistrationInfo(classSymbol, lifetime, registrationServiceType, serviceKey, strategy, module));
+                            serviceRegistrationSet.Add((registrationServiceType, serviceKey));
+                        }
                     }
                 }
 
-                var serviceTypes = new HashSet<INamedTypeSymbol?>(SymbolEqualityComparer.Default);
-                if (registerImplementedInterfaces)
-                {
-                    serviceTypes.UnionWith(classSymbol.AllInterfaces);
-                }
-
-                // A specified service type is additive when interfaces are registered. Without
-                // the option it retains the existing self-registration behaviour (null value).
-                if (!registerImplementedInterfaces || serviceType is not null)
-                {
-                    serviceTypes.Add(serviceType);
-                }
-
-                foreach (var registrationServiceType in serviceTypes)
-                {
-                    // Avoid duplicate registrations
-                    if (!serviceRegistrationSet.Contains((registrationServiceType, serviceKey)))
-                    {
-                        regList.Add(new RegistrationInfo(classSymbol, lifetime, registrationServiceType, serviceKey, strategy, module));
-                        serviceRegistrationSet.Add((registrationServiceType, serviceKey));
-                    }
-                }
-            }
-
-            registrations.AddRange(regList
-                .OrderBy(r => r.ServiceType is null ? 0 : 1)
-                .ThenBy(r => r.Strategy == "Replace" ? 1 : 0));
+                registrations.AddRange(regList
+                    .OrderBy(r => r.ServiceType is null ? 0 : 1)
+                    .ThenBy(r => r.Strategy == "Replace" ? 1 : 0));
             }
 
             if (IsSupportedRegistrationType(classSymbol))
@@ -534,7 +534,7 @@ internal sealed class AutoInjectGenerator : IIncrementalGenerator
             moduleCode.OpenBrace();
             moduleCode.AppendLine("if (services == null) throw new global::System.ArgumentNullException(nameof(services));");
             if (moduleNeedsConfiguration)
-            if (moduleNeedsConfiguration) moduleCode.AppendLine("if (configuration == null) throw new global::System.ArgumentNullException(nameof(configuration));");
+                if (moduleNeedsConfiguration) moduleCode.AppendLine("if (configuration == null) throw new global::System.ArgumentNullException(nameof(configuration));");
             moduleCode.AppendLine("AddSingletonServices(services);");
             moduleCode.AppendLine("AddScopedServices(services);");
             moduleCode.AppendLine("AddTransientServices(services);");
