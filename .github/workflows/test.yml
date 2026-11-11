@@ -58,7 +58,9 @@ jobs:
         if: matrix.framework == 'net11.0'
         shell: bash
         run: |
-          for spec in "6.0.428 net6.0 6.0.0" "8.0.424 net8.0 8.0.0"; do
+          sdk_6=$(dotnet --list-sdks | awk '{print $1}' | grep '^6\.0\.' | tail -n 1)
+          sdk_8=$(dotnet --list-sdks | awk '{print $1}' | grep '^8\.0\.' | tail -n 1)
+          for spec in "$sdk_6 net6.0 6.0.0" "$sdk_8 net8.0 8.0.0"; do
             read -r sdk tfm di_version <<< "$spec"
             probe="$(mktemp -d)"
             pushd "$probe"
