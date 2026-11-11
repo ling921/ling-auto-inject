@@ -1,8 +1,8 @@
+using System.Collections.Concurrent;
+using System.Collections.Immutable;
 using Ling.AutoInject.SourceGenerators.Diagnostics;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
-using System.Collections.Concurrent;
-using System.Collections.Immutable;
 
 namespace Ling.AutoInject.SourceGenerators.Analyzers;
 

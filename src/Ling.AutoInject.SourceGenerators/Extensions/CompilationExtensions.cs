@@ -1,7 +1,7 @@
+using Ling.AutoInject.SourceGenerators.Helpers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Ling.AutoInject.SourceGenerators.Helpers;
 
 namespace Ling.AutoInject.SourceGenerators.Extensions;
 

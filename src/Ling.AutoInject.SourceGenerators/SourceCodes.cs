@@ -1,4 +1,4 @@
-﻿namespace Ling.AutoInject.SourceGenerators;
+namespace Ling.AutoInject.SourceGenerators;
 
 /// <summary>
 /// Holds the source code strings for the attributes used in the source generator.

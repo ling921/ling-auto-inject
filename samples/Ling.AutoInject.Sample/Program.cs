@@ -1,9 +1,9 @@
+using System.ComponentModel.DataAnnotations;
 using Ling.AutoInject;
 using Ling.AutoInject.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using System.ComponentModel.DataAnnotations;
 
 var services = new ServiceCollection();
 var configuration = new ConfigurationBuilder()

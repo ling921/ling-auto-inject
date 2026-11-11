@@ -28,6 +28,7 @@ jobs:
           - net8.0
           - net9.0
           - net10.0
+          - net11.0
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -44,27 +45,29 @@ jobs:
         run: dotnet test tests/Ling.AutoInject.SourceGenerators.Tests/Ling.AutoInject.SourceGenerators.Tests.csproj --framework ${{ matrix.framework }} --configuration Release --no-build --verbosity normal
 
       - name: Run sample
-        if: matrix.framework == 'net10.0'
+        if: matrix.framework == 'net11.0'
         run: dotnet run --project samples/Ling.AutoInject.Sample/Ling.AutoInject.Sample.csproj --configuration Release --no-build
 
       - name: Pack
-        if: matrix.framework == 'net10.0'
+        if: matrix.framework == 'net11.0'
         run: |
           dotnet pack src/Ling.AutoInject/Ling.AutoInject.csproj --configuration Release --no-build --output artifacts/packages
           dotnet pack src/Ling.AutoInject.Options/Ling.AutoInject.Options.csproj --configuration Release --no-build --output artifacts/packages
 
       - name: Verify packaged analyzer compatibility
-        if: matrix.framework == 'net10.0'
+        if: matrix.framework == 'net11.0'
         shell: bash
         run: |
-          for spec in "6.0.428 net6.0 6.0.0" "8.0.424 net8.0 8.0.0"; do
+          sdk_6=$(dotnet --list-sdks | awk '{print $1}' | grep '^6\.0\.' | tail -n 1)
+          sdk_8=$(dotnet --list-sdks | awk '{print $1}' | grep '^8\.0\.' | tail -n 1)
+          for spec in "$sdk_6 net6.0 6.0.0" "$sdk_8 net8.0 8.0.0"; do
             read -r sdk tfm di_version <<< "$spec"
             probe="$(mktemp -d)"
             pushd "$probe"
             dotnet new globaljson --sdk-version "$sdk" --roll-forward disable
             dotnet new console --framework "$tfm" --no-restore
             sed -i '/<TargetFramework>/a\    <AssemblyName>CompatProbe</AssemblyName>' *.csproj
-            dotnet add package Ling.AutoInject --version 1.4.1 --source "$GITHUB_WORKSPACE/artifacts/packages"
+            dotnet add package Ling.AutoInject --version 1.5.0 --source "$GITHUB_WORKSPACE/artifacts/packages"
             dotnet add package Microsoft.Extensions.DependencyInjection --version "$di_version"
             cat > Program.cs <<'EOF'
           using CompatProbe;
@@ -85,7 +88,7 @@ jobs:
           done
 
       - name: Upload package artifact
-        if: matrix.framework == 'net10.0'
+        if: matrix.framework == 'net11.0'
         uses: actions/upload-artifact@v4
         with:
           name: Ling.AutoInject-nupkg
