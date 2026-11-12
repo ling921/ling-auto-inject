@@ -48,6 +48,12 @@ jobs:
         if: matrix.framework == 'net11.0'
         run: dotnet run --project samples/Ling.AutoInject.Sample/Ling.AutoInject.Sample.csproj --configuration Release --no-build
 
+      - name: Verify Native AOT publish and execution
+        if: matrix.framework == 'net11.0'
+        run: |
+          dotnet publish tests/Ling.AutoInject.NativeAotSmoke/Ling.AutoInject.NativeAotSmoke.csproj --configuration Release --runtime linux-x64 --self-contained true -warnaserror
+          ./tests/Ling.AutoInject.NativeAotSmoke/bin/Release/net11.0/linux-x64/publish/Ling.AutoInject.NativeAotSmoke
+
       - name: Pack
         if: matrix.framework == 'net11.0'
         run: |
@@ -67,7 +73,7 @@ jobs:
             dotnet new globaljson --sdk-version "$sdk" --roll-forward disable
             dotnet new console --framework "$tfm" --no-restore
             sed -i '/<TargetFramework>/a\    <AssemblyName>CompatProbe</AssemblyName>' *.csproj
-            dotnet add package Ling.AutoInject --version 1.5.0 --source "$GITHUB_WORKSPACE/artifacts/packages"
+            dotnet add package Ling.AutoInject --version 1.6.0 --source "$GITHUB_WORKSPACE/artifacts/packages"
             dotnet add package Microsoft.Extensions.DependencyInjection --version "$di_version"
             cat > Program.cs <<'EOF'
           using CompatProbe;
