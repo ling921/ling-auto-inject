@@ -19,5 +19,6 @@
     <File Path="tests/Directory.Build.props" />
     <File Path="tests/Directory.Packages.props" />
     <Project Path="tests/Ling.AutoInject.SourceGenerators.Tests/Ling.AutoInject.SourceGenerators.Tests.csproj" Id="9e041120-fb56-45e0-a1e9-d523c7b6347c" />
+    <Project Path="tests/Ling.AutoInject.NativeAotSmoke/Ling.AutoInject.NativeAotSmoke.csproj" />
   </Folder>
 </Solution>
