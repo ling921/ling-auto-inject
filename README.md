@@ -1,6 +1,6 @@
-# Ling.AutoInject [![NuGet](https://img.shields.io/nuget/v/Ling.AutoInject.svg)](https://www.nuget.org/packages/Ling.AutoInject/)
+# Ling.AutoInject
 
-[English](README.md) | [简体中文](README.zh-CN.md)
+English | [简体中文](README.zh-CN.md)
 
 `Ling.AutoInject` provides attribute-driven dependency injection registrations plus a source generator that emits `IServiceCollection` extension methods for automatic registration.
 
@@ -8,8 +8,8 @@
 
 | Package | Purpose |
 | --- | --- |
-| [`Ling.AutoInject`](src/Ling.AutoInject/README.md) | Core DI attributes, source generator, analyzers, and generated registration entry point. |
-| [`Ling.AutoInject.Options`](src/Ling.AutoInject.Options/README.md) | Optional `[AutoOptions]` contract plus configuration binding and validation dependencies. |
+| [`Ling.AutoInject`](src/Ling.AutoInject/README.md) [![NuGet](https://img.shields.io/nuget/v/Ling.AutoInject.svg)](https://www.nuget.org/packages/Ling.AutoInject/) | Core DI attributes, source generator, analyzers, and generated registration entry point. |
+| [`Ling.AutoInject.Options`](src/Ling.AutoInject.Options/README.md) [![NuGet](https://img.shields.io/nuget/v/Ling.AutoInject.Options.svg)](https://www.nuget.org/packages/Ling.AutoInject.Options/) | Optional `[AutoOptions]` contract plus configuration binding and validation dependencies. |
 
 ## Features
 - Attribute-based registration: `AutoInject`, `SingletonService`, `ScopedService`, `TransientService`.
@@ -73,4 +73,4 @@ Version 2.0 closes the standalone 1.x line. Future compatibility policy, support
 
 ## License
 
-- [MIT License](LICENSE)
+[MIT](LICENSE)
