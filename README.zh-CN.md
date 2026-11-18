@@ -2,16 +2,14 @@
 
 [English](README.md) | 简体中文
 
-[![NuGet](https://img.shields.io/nuget/v/Ling.AutoInject.svg)](https://www.nuget.org/packages/Ling.AutoInject/)
-
 `Ling.AutoInject` 是一个基于属性和 Roslyn 增量源生成器的编译期依赖注入工具。它会发现被标记的服务类型，并生成 `IServiceCollection` 扩展方法完成注册。
 
-## 包
+## NuGet 包
 
 | 包 | 用途 |
 | --- | --- |
-| [`Ling.AutoInject`](src/Ling.AutoInject/README.zh-CN.md) | 核心 DI 属性、源生成器、分析器与生成的注册入口。 |
-| [`Ling.AutoInject.Options`](src/Ling.AutoInject.Options/README.zh-CN.md) | 可选的 `[AutoOptions]` 契约，以及配置绑定和验证依赖。 |
+| [`Ling.AutoInject`](src/Ling.AutoInject/README.zh-CN.md) [![NuGet](https://img.shields.io/nuget/v/Ling.AutoInject.svg)](https://www.nuget.org/packages/Ling.AutoInject/) | 核心 DI 属性、源生成器、分析器与生成的注册入口。 |
+| [`Ling.AutoInject.Options`](src/Ling.AutoInject.Options/README.zh-CN.md) [![NuGet](https://img.shields.io/nuget/v/Ling.AutoInject.Options.svg)](https://www.nuget.org/packages/Ling.AutoInject.Options/) | 可选的 `[AutoOptions]` 契约，以及配置绑定和验证依赖。 |
 
 ## 特性
 
